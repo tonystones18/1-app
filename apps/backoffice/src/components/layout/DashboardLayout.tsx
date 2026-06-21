@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   Box, AppBar, Toolbar, IconButton, Typography, Tooltip, Badge, InputBase,
   Popover, List, ListItem, ListItemText, ListItemIcon, Divider, Avatar,
@@ -7,9 +7,10 @@ import {
 } from '@mui/material';
 import {
   Search, Notifications, LightMode, DarkMode, Settings,
-  CreditCard, Shield, TrendingUp, Warning, CheckCircle, NavigateNext,
+  CreditCard, Shield, TrendingUp, Warning, CheckCircle,
+  Menu, Refresh, Apps, Fullscreen, FullscreenExit,
 } from '@mui/icons-material';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Sidebar } from './Sidebar';
 import { useThemeMode } from '@/theme/MuiThemeProvider';
@@ -69,13 +70,22 @@ const NOTIFICATIONS = [
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   const [notifAnchor, setNotifAnchor] = useState<HTMLButtonElement | null>(null);
+  const [fullscreen, setFullscreen] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
   const { mode, toggleMode } = useThemeMode();
   const { user } = useAuthStore();
 
-  const title = PAGE_TITLES[pathname] ?? 'VisioneSoft Admin';
+  const toggleFullscreen = useCallback(() => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen();
+      setFullscreen(true);
+    } else {
+      document.exitFullscreen();
+      setFullscreen(false);
+    }
+  }, []);
 
-  // Build breadcrumbs from path
   const segments = pathname.split('/').filter(Boolean);
   const breadcrumbs = segments.map((seg, idx) => {
     const href = '/' + segments.slice(0, idx + 1).join('/');
@@ -97,42 +107,69 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           elevation={0}
           sx={{ bgcolor: 'background.paper', borderBottom: '1px solid', borderColor: 'divider', color: 'text.primary' }}
         >
-          <Toolbar sx={{ gap: 1.5, minHeight: '56px !important' }}>
-            {/* Title + breadcrumb */}
-            <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-              <Typography variant="subtitle1" sx={{ fontWeight: 700, lineHeight: 1.2, fontSize: '0.9rem' }}>
-                {title}
-              </Typography>
-              {breadcrumbs.length > 1 && (
-                <Breadcrumbs separator={<NavigateNext sx={{ fontSize: 12 }} />} sx={{ '& .MuiBreadcrumbs-ol': { flexWrap: 'nowrap' } }}>
-                  <MuiLink component={Link} href="/dashboard" underline="hover" color="text.disabled" sx={{ fontSize: '0.7rem' }}>
-                    Home
-                  </MuiLink>
-                  {breadcrumbs.map(({ href, label, isLast }) =>
-                    isLast ? (
-                      <Typography key={href} sx={{ fontSize: '0.7rem', color: 'primary.main', fontWeight: 500 }}>{label}</Typography>
-                    ) : (
-                      <MuiLink key={href} component={Link} href={href} underline="hover" color="text.disabled" sx={{ fontSize: '0.7rem' }}>
-                        {label}
-                      </MuiLink>
-                    )
-                  )}
-                </Breadcrumbs>
+          <Toolbar sx={{ gap: 0.75, minHeight: '56px !important', px: { xs: 1.5, sm: 2 } }}>
+            {/* ── Left: hamburger | refresh | apps | breadcrumbs ── */}
+            <Tooltip title="Toggle sidebar">
+              <IconButton size="small" onClick={() => setCollapsed(!collapsed)} sx={{ color: 'text.secondary' }}>
+                <Menu sx={{ fontSize: 20 }} />
+              </IconButton>
+            </Tooltip>
+
+            <Tooltip title="Refresh">
+              <IconButton size="small" onClick={() => router.refresh()} sx={{ color: 'text.secondary' }}>
+                <Refresh sx={{ fontSize: 18 }} />
+              </IconButton>
+            </Tooltip>
+
+            <Tooltip title="Dashboard">
+              <IconButton size="small" component={Link} href="/dashboard" sx={{ color: 'text.secondary' }}>
+                <Apps sx={{ fontSize: 18 }} />
+              </IconButton>
+            </Tooltip>
+
+            {/* Breadcrumbs */}
+            <Breadcrumbs
+              separator={<Box component="span" sx={{ color: 'text.disabled', mx: 0.25 }}>/</Box>}
+              sx={{ ml: 0.5, '& .MuiBreadcrumbs-ol': { flexWrap: 'nowrap', alignItems: 'center' } }}
+            >
+              <MuiLink
+                component={Link}
+                href="/dashboard"
+                underline="hover"
+                sx={{ fontSize: '0.8125rem', color: 'text.secondary', '&:hover': { color: 'primary.main' } }}
+              >
+                {breadcrumbs.length > 0 ? (SECTION_MAP[breadcrumbs[0]?.href.split('/')[1]] ?? 'Dashboard') : 'Dashboard'}
+              </MuiLink>
+              {breadcrumbs.map(({ href, label, isLast }) =>
+                isLast ? (
+                  <Typography key={href} sx={{ fontSize: '0.8125rem', color: 'text.primary', fontWeight: 500 }}>
+                    {label}
+                  </Typography>
+                ) : null
               )}
-            </Box>
+            </Breadcrumbs>
 
             <Box sx={{ flex: 1 }} />
 
+            {/* ── Right: search | fullscreen | bell | moon | gear | avatar ── */}
+
             {/* Search */}
             <Box sx={{
-              display: { xs: 'none', md: 'flex' }, alignItems: 'center', gap: 1,
-              bgcolor: 'action.hover', borderRadius: 1.5, px: 1.5, py: 0.5,
-              border: '1px solid', borderColor: 'divider',
+              display: { xs: 'none', md: 'flex' }, alignItems: 'center', gap: 0.75,
+              bgcolor: 'action.hover', borderRadius: 1.5, px: 1.5, py: 0.6,
+              border: '1px solid', borderColor: 'divider', cursor: 'text',
               '&:focus-within': { borderColor: 'primary.main', bgcolor: 'background.paper' },
             }}>
-              <Search sx={{ fontSize: 16, color: 'text.secondary' }} />
-              <InputBase placeholder="Search… ⌘K" sx={{ fontSize: '0.8rem', minWidth: 160 }} />
+              <Search sx={{ fontSize: 15, color: 'text.disabled' }} />
+              <InputBase placeholder="Search  ⌘K" sx={{ fontSize: '0.8rem', minWidth: 140, '& input::placeholder': { color: 'text.disabled' } }} />
             </Box>
+
+            {/* Fullscreen */}
+            <Tooltip title={fullscreen ? 'Exit fullscreen' : 'Fullscreen'}>
+              <IconButton size="small" onClick={toggleFullscreen} sx={{ color: 'text.secondary' }}>
+                {fullscreen ? <FullscreenExit sx={{ fontSize: 20 }} /> : <Fullscreen sx={{ fontSize: 20 }} />}
+              </IconButton>
+            </Tooltip>
 
             {/* Notifications Bell */}
             <Tooltip title="Notifications">
