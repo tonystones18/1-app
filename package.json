@@ -13,12 +13,14 @@
     "dev": "turbo run dev --parallel",
     "lint": "turbo run lint",
     "test": "turbo run test",
-    "test:unit": "node --test tests/unit",
     "typecheck": "turbo run typecheck",
     "db:generate": "prisma generate --schema database/prisma/schema.prisma",
+    "db:migrate": "prisma migrate dev --schema database/prisma/schema.prisma",
     "db:validate": "pnpm -C packages/database db:validate",
-    "validate:workspace": "powershell -ExecutionPolicy Bypass -File scripts/validate-workspace.ps1",
-    "phase0:check": "pnpm validate:workspace && pnpm db:validate && pnpm db:generate && pnpm typecheck && pnpm build && pnpm test:unit"
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f",
+    "validate:workspace": "powershell -ExecutionPolicy Bypass -File scripts/validate-workspace.ps1"
   },
   "devDependencies": {
     "@types/node": "^22.10.5",

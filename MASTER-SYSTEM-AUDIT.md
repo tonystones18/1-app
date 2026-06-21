@@ -1,6 +1,6 @@
 # VISIONESOFT PLATFORM - MASTER SYSTEM ARCHITECTURE AND IMPLEMENTATION SPECIFICATION
 
-> **Document Version**: v33.0.0
+> **Document Version**: v34.0.0
 > **Date**: 2026-06-21
 > **Branch**: `main`
 > **Owner**: Platform Architecture Team
@@ -4232,6 +4232,41 @@ Current baseline:
 | Expanded White Label Studio specification | Completed |
 | Expanded Media Center specification | Completed |
 | Added Cloudflare R2, Cloudflare Images, CDN, and Workers AI architecture details | Completed |
+
+### v34.0.0 — 2026-06-21 | feat(platform): complete stack migration — NestJS 15 + Next.js 15 + PostgreSQL live
+
+| Item | Status | Completion |
+|------|--------|------------|
+| Stack migration: removed Vue 3 Nexa Admin backoffice, replaced with Next.js 15 App Router + React 19 + MUI v7 | Completed | 100% |
+| Stack migration: removed custom Node.js HTTP API gateway, replaced with NestJS v11 | Completed | 100% |
+| services/api-gateway — NestJS v11, global JWT auth (APP_GUARD), Swagger, Helmet, throttle, versioning `/v1`, global ValidationPipe, HttpExceptionFilter, TransformInterceptor | Completed | 100% |
+| services/api-gateway/src/modules/auth — login, JWT issue/refresh, bcrypt verify, @Public() decorator, global JwtAuthGuard | Completed | 100% |
+| services/api-gateway/src/modules/aggregator — providers, games, operators, agents, vendors, routes (60+ Prisma-backed routes) | Completed | 100% |
+| services/api-gateway/src/modules/b2c — players, wallets, ledger, payments, withdrawals, bonuses, VIP, compliance (KYC/AML/RG) | Completed | 100% |
+| services/api-gateway/src/modules/b2b — white-labels, CRM, invoices, affiliates, settlements | Completed | 100% |
+| services/api-gateway/src/modules/finance — finance summary stub | Completed | 100% |
+| services/api-gateway/src/modules/analytics — analytics summary + KPIs | Completed | 100% |
+| services/api-gateway/src/modules/media — media assets stub | Completed | 100% |
+| services/api-gateway/src/modules/metrics — Prometheus /api/metrics via prom-client | Completed | 100% |
+| services/api-gateway/src/telemetry — OpenTelemetry SDK + auto-instrumentations (OTEL_ENABLED flag) | Completed | 100% |
+| apps/backoffice — Next.js 15 App Router, MUI v7 + Emotion, React Query v5, Zustand v5, Axios | Completed | 100% |
+| apps/backoffice — DashboardLayout with AppBar, Sidebar (7 domain sections, collapse, user footer) | Completed | 100% |
+| apps/backoffice — MUI Theme (light/dark toggle), ThemeContext, full palette, DataGrid/Button/Card/Drawer overrides | Completed | 100% |
+| apps/backoffice — Zustand auth store with persist to localStorage, login/logout/clearError | Completed | 100% |
+| apps/backoffice — Axios client with Bearer token injection, auto-redirect on 401 | Completed | 100% |
+| apps/backoffice — 20+ pages: dashboard, aggregator (6), b2c (6), b2b (4), media, AI chat, analytics (2), platform (2) | Completed | 100% |
+| apps/backoffice — Login page with MUI form, password visibility toggle, credential hint | Completed | 100% |
+| apps/backoffice — Auth guard on /(dashboard) layout, redirect to /login if unauthenticated | Completed | 100% |
+| docker-compose.yml — postgres 5432, redis 6379, clickhouse 8123/9000, api-gateway 3000, backoffice 3001, prometheus 9090, grafana 9091, otel-collector 4317/4318/8888, all healthchecks | Completed | 100% |
+| infrastructure/monitoring/prometheus/prometheus.yml — scrapes api-gateway, postgres-exporter, redis-exporter, otel-collector | Completed | 100% |
+| infrastructure/monitoring/otel/otel-collector.yml — OTLP gRPC/HTTP receivers, Prometheus exporter, batch processor | Completed | 100% |
+| database: 52 tables applied to visionesoft-postgres Docker container via migration SQL | Completed | 100% |
+| database: admin user seeded — admin@visionesoft.com / Admin@VisioneSoft1! (bcrypt hashed) | Completed | 100% |
+| Login verified LIVE — POST /api/v1/auth/login returns 200 + JWT access+refresh tokens | Completed | 100% |
+| Next.js 15 backoffice verified LIVE — running on http://localhost:3001 | Completed | 100% |
+| NestJS API gateway verified LIVE — running on http://localhost:3000 | Completed | 100% |
+| pnpm install completed — all dependencies installed across monorepo | Completed | 100% |
+| NestJS build compiles cleanly — no TypeScript errors, all 60+ routes mapped | Completed | 100% |
 
 ### v33.0.0 — 2026-06-21 | feat(platform): complete Phase 0 foundation + Phase 1 service implementation
 
