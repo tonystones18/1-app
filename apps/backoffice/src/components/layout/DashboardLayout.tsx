@@ -9,7 +9,7 @@ import {
   Search, Notifications, LightMode, DarkMode, Tune,
   CreditCard, Shield, TrendingUp, Warning, CheckCircle,
   Menu, Refresh, Apps, Fullscreen, FullscreenExit, Translate, Close,
-  Add, Remove,
+  Add, Remove, SmartToy,
 } from '@mui/icons-material';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -402,6 +402,13 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                 </Typography>
               </Box>
             </Popover>
+
+            {/* AI Copilot */}
+            <Tooltip title="AI Copilot">
+              <IconButton size="small" component={Link} href="/ai" sx={{ color: 'text.secondary' }}>
+                <SmartToy sx={{ fontSize: 20 }} />
+              </IconButton>
+            </Tooltip>
 
             {/* Language (conditional) */}
             {showMultilingual && (
