@@ -140,16 +140,20 @@ export function Sidebar({ collapsed, onToggle, menuStyle = 'light', menuLayout =
   const dividerColor = isDark ? 'rgba(255,255,255,0.1)' : 'divider';
 
   const isDual = menuLayout === 'dual';
-  const ICON_PANEL_WIDTH = 64;
-  const textPanelWidth = Math.max(menuWidth - ICON_PANEL_WIDTH, 160);
+  const ICON_PANEL_WIDTH = 72;
+  const textPanelWidth = Math.max(menuWidth - ICON_PANEL_WIDTH, 150);
   const sidebarActualWidth = collapsed
     ? SIDEBAR_COLLAPSED
     : isDual ? ICON_PANEL_WIDTH + textPanelWidth : menuWidth;
 
-  // Items to show in vertical/mixed sidebar (mixed: only active section children)
-  const itemsToRender = (menuLayout === 'mixed' && activeSectionChildren && activeSectionChildren.length > 0)
-    ? null // mixed layout uses activeSectionChildren below
-    : navItems;
+  // Dual layout: track which section is shown in the text panel
+  const activeDualDefault = navItems.find((i) => i.children?.some((c) => c.href && isActive(c.href))) ?? navItems.find((i) => !!i.children) ?? null;
+  const [dualActiveSection, setDualActiveSection] = React.useState(activeDualDefault);
+  React.useEffect(() => {
+    const matched = navItems.find((i) => i.children?.some((c) => c.href && isActive(c.href)));
+    if (matched) setDualActiveSection(matched);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
 
   const renderNavItems = (items: NavItem[]) => items.map((item) => {
     if (item.children) {
@@ -294,72 +298,87 @@ export function Sidebar({ collapsed, onToggle, menuStyle = 'light', menuLayout =
       {/* ── DUAL layout: icon panel + text panel ── */}
       {isDual && !collapsed ? (
         <>
-          {/* Narrow icon panel */}
+          {/* Narrow icon+label strip */}
           <Box sx={{ width: ICON_PANEL_WIDTH, display: 'flex', flexDirection: 'column', flexShrink: 0, bgcolor: iconPanelBg, borderRight: '1px solid', borderColor: dividerColor }}>
-            <Box sx={{ height: 64, display: 'flex', alignItems: 'center', justifyContent: 'center', borderBottom: '1px solid', borderColor: dividerColor }}>
+            {/* Brand logo */}
+            <Box sx={{ height: 64, display: 'flex', alignItems: 'center', justifyContent: 'center', borderBottom: '1px solid', borderColor: dividerColor, flexShrink: 0 }}>
               <Box sx={{ width: 32, height: 32, bgcolor: 'primary.main', borderRadius: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <Speed sx={{ fontSize: 18, color: 'white' }} />
               </Box>
             </Box>
-            <Box sx={{ flex: 1, overflow: 'auto', py: 1.5 }}>
+            {/* Icon + label items */}
+            <Box sx={{ flex: 1, overflow: 'auto', py: 1 }}>
               {navItems.map((item) => {
                 const anyActive = item.children?.some((c) => c.href && isActive(c.href)) ?? (item.href ? isActive(item.href) : false);
-                const iconColor = (isDark || isMixed) ? (anyActive ? activeColor : 'rgba(255,255,255,0.6)') : (anyActive ? activeColor : textSecondary);
+                const isPanelActive = dualActiveSection?.label === item.label;
+                const iconColor = (isDark || isMixed)
+                  ? ((anyActive || isPanelActive) ? activeColor : 'rgba(255,255,255,0.6)')
+                  : ((anyActive || isPanelActive) ? activeColor : textSecondary);
                 return (
-                  <Tooltip key={item.label} title={item.label} placement="right">
-                    <Box sx={{ display: 'flex', justifyContent: 'center', mb: 0.5 }}>
-                      <IconButton
-                        size="small"
-                        component={item.href ? Link : item.children?.[0]?.href ? Link : 'button'}
-                        href={item.href ?? item.children?.[0]?.href ?? undefined}
-                        sx={{ color: iconColor, bgcolor: anyActive ? activeBg : 'transparent', borderRadius: 1.5, '&:hover': { bgcolor: hoverBg } }}
-                      >
-                        {item.icon}
-                      </IconButton>
-                    </Box>
-                  </Tooltip>
+                  <Box
+                    key={item.label}
+                    onClick={() => {
+                      if (item.children) {
+                        setDualActiveSection(item);
+                      } else if (item.href) {
+                        router.push(item.href);
+                      }
+                    }}
+                    sx={{
+                      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                      py: 1, px: 0.5, mb: 0.25, mx: 0.5, borderRadius: 1.5, cursor: 'pointer',
+                      color: iconColor,
+                      bgcolor: (anyActive || isPanelActive) ? activeBg : 'transparent',
+                      '&:hover': { bgcolor: hoverBg },
+                      transition: 'all 0.15s',
+                    }}
+                  >
+                    <Box sx={{ '& svg': { fontSize: 20 }, color: 'inherit', mb: 0.5 }}>{item.icon}</Box>
+                    <Typography sx={{ fontSize: '0.6rem', lineHeight: 1.1, textAlign: 'center', color: 'inherit', fontWeight: (anyActive || isPanelActive) ? 600 : 400, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 60 }}>
+                      {item.label}
+                    </Typography>
+                  </Box>
                 );
               })}
             </Box>
+            {/* User avatar at bottom */}
             <Divider sx={{ borderColor: dividerColor }} />
-            <Box sx={{ py: 1.5, display: 'flex', justifyContent: 'center' }}>
-              <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main', fontSize: '0.875rem' }}>
-                {user?.displayName?.[0]?.toUpperCase() ?? 'A'}
-              </Avatar>
+            <Box sx={{ py: 1.5, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+              <Tooltip title={user?.displayName ?? 'Profile'} placement="right">
+                <Avatar sx={{ width: 30, height: 30, bgcolor: 'primary.main', fontSize: '0.8rem', cursor: 'pointer' }}>
+                  {user?.displayName?.[0]?.toUpperCase() ?? 'A'}
+                </Avatar>
+              </Tooltip>
+              <IconButton size="small" onClick={onToggle} sx={{ color: (isDark || isMixed) ? 'rgba(255,255,255,0.5)' : textSecondary }}>
+                <ChevronLeft sx={{ fontSize: 16 }} />
+              </IconButton>
             </Box>
           </Box>
-          {/* Text labels panel */}
+
+          {/* Text labels panel — shows active section's children */}
           <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, bgcolor: sidebarBg }}>
-            <Box sx={{ px: 2, height: 64, display: 'flex', alignItems: 'center', borderBottom: '1px solid', borderColor: dividerColor }}>
-              <Typography variant="subtitle2" sx={{ fontWeight: 700, color: textPrimary }}>VisioneSoft</Typography>
+            {/* Panel header: active section name */}
+            <Box sx={{ px: 2, height: 64, display: 'flex', alignItems: 'center', borderBottom: '1px solid', borderColor: dividerColor, flexShrink: 0 }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700, color: textPrimary }}>
+                {dualActiveSection?.label ?? 'Navigation'}
+              </Typography>
             </Box>
             <Box sx={{ flex: 1, overflow: 'auto', py: 1.5 }}>
               <List dense disablePadding>
-                {navItems.map((item) => {
-                  if (item.children) {
+                {dualActiveSection?.children ? (
+                  dualActiveSection.children.map((child) => {
+                    const active = !!(child.href && isActive(child.href));
                     return (
-                      <React.Fragment key={item.label}>
-                        <Typography variant="caption" sx={{ px: 2, pt: 1, pb: 0.5, display: 'block', color: textDisabled, fontWeight: 600, fontSize: '0.65rem', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-                          {item.label}
-                        </Typography>
-                        {item.children.map((child) => {
-                          const active = !!(child.href && isActive(child.href));
-                          return (
-                            <ListItemButton key={child.href} component={Link} href={child.href!} sx={{ pl: 2, pr: 1.5, py: 0.5, mx: 0.5, borderRadius: 1.5, mb: 0.25, color: active ? activeColor : textSecondary, bgcolor: active ? activeBg : 'transparent', '&:hover': { bgcolor: hoverBg, color: textPrimary } }}>
-                              <ListItemText primary={child.label} primaryTypographyProps={{ fontSize: '0.8rem', fontWeight: active ? 600 : 400, color: 'inherit' }} />
-                            </ListItemButton>
-                          );
-                        })}
-                      </React.Fragment>
+                      <ListItemButton key={child.href} component={Link} href={child.href!} sx={{ pl: 2, pr: 1.5, py: 0.6, mx: 0.5, borderRadius: 1.5, mb: 0.25, color: active ? activeColor : textSecondary, bgcolor: active ? activeBg : 'transparent', '&:hover': { bgcolor: hoverBg, color: textPrimary } }}>
+                        <ListItemText primary={child.label} primaryTypographyProps={{ fontSize: '0.8125rem', fontWeight: active ? 600 : 400, color: 'inherit' }} />
+                      </ListItemButton>
                     );
-                  }
-                  const active = !!(item.href && isActive(item.href));
-                  return (
-                    <ListItemButton key={item.href} component={Link} href={item.href!} sx={{ pl: 2, pr: 1.5, py: 0.5, mx: 0.5, borderRadius: 1.5, mb: 0.25, color: active ? activeColor : textSecondary, bgcolor: active ? activeBg : 'transparent', '&:hover': { bgcolor: hoverBg, color: textPrimary } }}>
-                      <ListItemText primary={item.label} primaryTypographyProps={{ fontSize: '0.8rem', fontWeight: active ? 600 : 400, color: 'inherit' }} />
-                    </ListItemButton>
-                  );
-                })}
+                  })
+                ) : dualActiveSection?.href ? (
+                  <ListItemButton component={Link} href={dualActiveSection.href} sx={{ pl: 2, pr: 1.5, py: 0.6, mx: 0.5, borderRadius: 1.5 }}>
+                    <ListItemText primary={dualActiveSection.label} primaryTypographyProps={{ fontSize: '0.8125rem', color: 'inherit' }} />
+                  </ListItemButton>
+                ) : null}
               </List>
             </Box>
             <Divider sx={{ borderColor: dividerColor }} />
@@ -373,9 +392,6 @@ export function Sidebar({ collapsed, onToggle, menuStyle = 'light', menuLayout =
                   <Logout sx={{ fontSize: 16 }} />
                 </IconButton>
               </Tooltip>
-              <IconButton size="small" onClick={onToggle} sx={{ color: textSecondary }}>
-                <ChevronLeft sx={{ fontSize: 18 }} />
-              </IconButton>
             </Box>
           </Box>
         </>

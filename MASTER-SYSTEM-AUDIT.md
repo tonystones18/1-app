@@ -1,6 +1,6 @@
 # VISIONESOFT PLATFORM - MASTER SYSTEM ARCHITECTURE AND IMPLEMENTATION SPECIFICATION
 
-> **Document Version**: v39.0.0
+> **Document Version**: v40.0.0
 > **Date**: 2026-06-21
 > **Branch**: `main`
 > **Owner**: Platform Architecture Team
@@ -4088,6 +4088,24 @@ Current baseline:
 ---
 
 ## 66. CHANGE LOG
+
+### v40.0.0 - 2026-06-22 | fix(backoffice): layout modes match Art Pro reference screenshots
+
+| Item | Status | Completion |
+|------|--------|------------|
+| **Mixed layout — always show sidebar** — sidebar is always visible in mixed mode (not hidden on root pages) | Completed | 100% |
+| `mixedSelectedSection` state in DashboardLayout tracks which section's children the sidebar displays | Completed | 100% |
+| Auto-detects section from pathname; defaults to first section with children if no match | Completed | 100% |
+| Clicking a horizontal nav item in mixed mode updates `mixedSelectedSection` AND navigates to first child | Completed | 100% |
+| Horizontal nav highlights the `mixedSelectedSection` (not just URL-matched item) | Completed | 100% |
+| `activeSectionItem` derives from `mixedSelectedSection` for mixed, null for other layouts | Completed | 100% |
+| **Dual layout — icon+label strip** — icon panel shows icon + small label text below each item (matches Art Pro) | Completed | 100% |
+| `dualActiveSection` state in Sidebar tracks which section's children are shown in text panel | Completed | 100% |
+| Clicking an icon in dual mode changes text panel to show that section's children (no navigation) | Completed | 100% |
+| Text panel header shows active section name; text panel shows that section's child links | Completed | 100% |
+| Dual icon strip auto-updates `dualActiveSection` when pathname changes to a section route | Completed | 100% |
+| Dual icon panel: collapse toggle + user avatar at bottom (clean footer) | Completed | 100% |
+| ICON_PANEL_WIDTH changed from 64 → 72px to accommodate icon + label layout | Completed | 100% |
 
 ### v39.0.0 - 2026-06-21 | feat(backoffice): Box Style, Container Width, Basic Config all working
 

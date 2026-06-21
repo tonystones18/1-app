@@ -217,16 +217,23 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 
   const unreadCount = NOTIFICATIONS.filter((n) => n.unread).length;
 
-  // For mixed layout: determine which section is active
-  const activeSectionItem = menuLayout === 'mixed'
-    ? navItems.find((item) => item.children?.some((c) => c.href && (pathname === c.href || pathname.startsWith(c.href + '/'))))
-    : null;
+  // For mixed layout: track selected section (persists across pages)
+  const firstSectionWithChildren = navItems.find((i) => !!i.children);
+  const urlSection = navItems.find((item) => item.children?.some((c) => c.href && (pathname === c.href || pathname.startsWith(c.href + '/'))));
+  const [mixedSelectedSection, setMixedSelectedSection] = React.useState(urlSection ?? firstSectionWithChildren ?? null);
+  // Auto-update selected section when navigating to a URL that matches a section
+  React.useEffect(() => {
+    const matched = navItems.find((item) => item.children?.some((c) => c.href && (pathname === c.href || pathname.startsWith(c.href + '/'))));
+    if (matched) setMixedSelectedSection(matched);
+  }, [pathname]);
 
   // Horizontal nav items (top-level sections for horizontal/mixed layouts)
   const isHorizontal = menuLayout === 'horizontal';
   const isMixedLayout = menuLayout === 'mixed';
-  // For mixed: only show sidebar when a section is active (has children to display)
-  const showSidebar = !isHorizontal && !(isMixedLayout && !activeSectionItem);
+  const showSidebar = !isHorizontal;
+
+  // activeSectionItem: used for sidebar children display
+  const activeSectionItem = isMixedLayout ? mixedSelectedSection : null;
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default', flexDirection: isHorizontal ? 'column' : 'row' }}>
@@ -469,13 +476,20 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                 const anyActive = item.children
                   ? item.children.some((c) => c.href && (pathname === c.href || pathname.startsWith(c.href + '/')))
                   : !!(item.href && (pathname === item.href || pathname.startsWith(item.href + '/')));
-                const isThisSection = activeSectionItem?.label === item.label;
+                const isThisSection = isMixedLayout
+                  ? mixedSelectedSection?.label === item.label
+                  : anyActive;
                 return (
                   <Box
                     key={item.label}
                     component={item.href && !item.children ? Link : 'div'}
                     href={item.href && !item.children ? item.href : undefined}
-                    onClick={item.children && item.children[0]?.href ? () => router.push(item.children![0].href!) : undefined}
+                    onClick={() => {
+                      if (item.children) {
+                        if (isMixedLayout) setMixedSelectedSection(item);
+                        if (item.children[0]?.href) router.push(item.children[0].href);
+                      }
+                    }}
                     sx={{
                       display: 'flex', alignItems: 'center', gap: 0.75, px: 1.5, py: 0.75,
                       borderRadius: 1.5, cursor: 'pointer', textDecoration: 'none', whiteSpace: 'nowrap',
