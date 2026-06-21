@@ -1,6 +1,6 @@
 # VISIONESOFT PLATFORM - MASTER SYSTEM ARCHITECTURE AND IMPLEMENTATION SPECIFICATION
 
-> **Document Version**: v38.0.0
+> **Document Version**: v39.0.0
 > **Date**: 2026-06-21
 > **Branch**: `main`
 > **Owner**: Platform Architecture Team
@@ -4088,6 +4088,31 @@ Current baseline:
 ---
 
 ## 66. CHANGE LOG
+
+### v39.0.0 - 2026-06-21 | feat(backoffice): Box Style, Container Width, Basic Config all working
+
+| Item | Status | Completion |
+|------|--------|------------|
+| **Box Style `border`** — `MuiCard`/`MuiPaper` get `boxShadow: none` + `border: 1px solid dividerColor` | Completed | 100% |
+| **Box Style `shadow`** — default shadow behavior unchanged | Completed | 100% |
+| `buildTheme()` — added `boxStyle: 'border' \| 'shadow'` parameter; `MuiCard` and `MuiPaper` overrides per mode | Completed | 100% |
+| `useMemo` deps updated to include `settings.boxStyle` | Completed | 100% |
+| **Container Width `boxed`** — main content wrapped in `Box` with `maxWidth: 1400, mx: 'auto'` | Completed | 100% |
+| **Container Width `full`** — no max-width; fills all available space (default) | Completed | 100% |
+| `containerWidth` extracted from `settings` in `DashboardLayout.tsx` | Completed | 100% |
+| **Show Work Tab** — tab bar rendered below AppBar; tracks up to 10 recently visited pages | Completed | 100% |
+| Work Tab: tabs show page title, active tab highlighted with `primary.50` + `primary.200` border | Completed | 100% |
+| Work Tab: each tab has close (×) button; navigating to a new path auto-adds tab | Completed | 100% |
+| Work Tab: `showWorkTab=false` hides the entire bar; `useState` resets per session | Completed | 100% |
+| **Show Top Progress Bar** — `LinearProgress` (height 3px) rendered sticky at top of content pane | Completed | 100% |
+| Top Progress Bar: `zIndex: drawer + 3`, only rendered when `showTopProgressBar=true` | Completed | 100% |
+| **Sidebar Accordion** — `sidebarAccordion=true` allows only one section open at a time | Completed | 100% |
+| Sidebar Accordion: `openSection` state, auto-opens active section on path change | Completed | 100% |
+| Sidebar Accordion: section header is clickable; shows ▲ chevron that rotates when open/closed | Completed | 100% |
+| `sidebarAccordion=false` — all sections remain expanded (previous behavior) | Completed | 100% |
+| `sidebarAccordion` prop passed from `DashboardLayout.tsx` → `Sidebar.tsx` | Completed | 100% |
+| `LinearProgress`, `Close` icon imports added to `DashboardLayout.tsx` | Completed | 100% |
+| No TypeScript errors across all modified files | Verified | 100% |
 
 ### v38.0.0 - 2026-06-21 | feat(backoffice): Menu Layout and Menu Style fully working
 

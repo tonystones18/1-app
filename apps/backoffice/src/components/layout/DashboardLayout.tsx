@@ -3,7 +3,7 @@ import React, { useState, useCallback } from 'react';
 import {
   Box, AppBar, Toolbar, IconButton, Typography, Tooltip, Badge, InputBase,
   Popover, List, ListItem, ListItemText, ListItemIcon, Divider, Avatar,
-  Breadcrumbs, Link as MuiLink, Chip, Switch, Select, MenuItem, Button,
+  Breadcrumbs, Link as MuiLink, Chip, Switch, Select, MenuItem, Button, LinearProgress,
 } from '@mui/material';
 import {
   Search, Notifications, LightMode, DarkMode, Tune,
@@ -179,7 +179,22 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { mode, toggleMode, primaryColor, setPrimaryColor, settings, updateSetting, resetSettings, copyConfig } = useThemeMode();
   const { showSidebarBtn, showFastEnter, showReloadBtn, showBreadcrumbs, showMultilingual, globalWatermark } = settings;
-  const { menuLayout, menuStyle, menuWidth } = settings;
+  const { menuLayout, menuStyle, menuWidth, containerWidth, showWorkTab, showTopProgressBar, sidebarAccordion } = settings;
+
+  // Work Tab: track visited pages
+  const [workTabs, setWorkTabs] = React.useState<Array<{ href: string; label: string }>>([]);
+  React.useEffect(() => {
+    if (!showWorkTab) return;
+    const title = PAGE_TITLES[pathname] ?? pathname.split('/').filter(Boolean).pop()?.replace(/-/g, ' ') ?? 'Page';
+    const label = title.charAt(0).toUpperCase() + title.slice(1);
+    setWorkTabs((prev) => {
+      if (prev.some((t) => t.href === pathname)) return prev;
+      return [...prev, { href: pathname, label }].slice(-10);
+    });
+  }, [pathname, showWorkTab]);
+  const closeTab = (href: string) => {
+    setWorkTabs((prev) => prev.filter((t) => t.href !== href));
+  };
   const { user } = useAuthStore();
 
   const toggleFullscreen = useCallback(() => {
@@ -240,11 +255,21 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           menuLayout={menuLayout}
           menuWidth={menuWidth}
           activeSectionChildren={activeSectionItem?.children}
+          sidebarAccordion={sidebarAccordion}
         />
       )}
 
       <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-        {/* Top Bar */}
+        {/* ── Top progress bar ── */}
+        {showTopProgressBar && (
+          <LinearProgress
+            variant="determinate"
+            value={100}
+            sx={{ height: 3, position: 'sticky', top: 0, zIndex: (theme) => theme.zIndex.drawer + 3, '& .MuiLinearProgress-bar': { transition: 'none' } }}
+          />
+        )}
+
+        {/* Top Bar */}}
         <AppBar
           position="sticky"
           elevation={0}
@@ -404,6 +429,35 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             </Tooltip>
           </Toolbar>
         </AppBar>
+
+        {/* ── Work Tab bar ── */}
+        {showWorkTab && workTabs.length > 0 && (
+          <Box sx={{ bgcolor: 'background.paper', borderBottom: '1px solid', borderColor: 'divider', px: 1, display: 'flex', alignItems: 'center', gap: 0.5, overflowX: 'auto', flexShrink: 0, minHeight: 36 }}>
+            {workTabs.map((tab) => (
+              <Box
+                key={tab.href}
+                sx={{
+                  display: 'flex', alignItems: 'center', gap: 0.5, px: 1.5, py: 0.5, borderRadius: 1,
+                  cursor: 'pointer', whiteSpace: 'nowrap', textDecoration: 'none',
+                  bgcolor: pathname === tab.href ? 'primary.50' : 'transparent',
+                  border: '1px solid', borderColor: pathname === tab.href ? 'primary.200' : 'transparent',
+                  '&:hover': { bgcolor: 'action.hover' },
+                  transition: 'all 0.15s',
+                }}
+                component={Link}
+                href={tab.href}
+              >
+                <Typography variant="caption" sx={{ fontSize: '0.78rem', color: pathname === tab.href ? 'primary.main' : 'text.secondary', fontWeight: pathname === tab.href ? 600 : 400 }}>
+                  {tab.label}
+                </Typography>
+                <IconButton size="small" sx={{ p: 0.25, color: 'text.disabled', '&:hover': { color: 'text.primary' } }}
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); closeTab(tab.href); }}>
+                  <Close sx={{ fontSize: 12 }} />
+                </IconButton>
+              </Box>
+            ))}
+          </Box>
+        )}
 
         {/* ── Horizontal / Mixed nav bar (below AppBar) ── */}
         {(isHorizontal || isMixedLayout) && (
@@ -650,7 +704,9 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 
         {/* Main content */}
         <Box component="main" sx={{ flex: 1, p: 3, overflow: 'auto' }}>
-          {children}
+          <Box sx={containerWidth === 'boxed' ? { maxWidth: 1400, mx: 'auto' } : {}}>
+            {children}
+          </Box>
         </Box>
       </Box>
     </Box>

@@ -56,9 +56,11 @@ export const DEFAULT_UI_SETTINGS: UISettings = {
   borderRadius: 1.0,
 };
 
-function buildTheme(mode: 'light' | 'dark', primaryColor: string, borderRadius: number, colorWeakMode: boolean) {
+function buildTheme(mode: 'light' | 'dark', primaryColor: string, borderRadius: number, colorWeakMode: boolean, boxStyle: 'border' | 'shadow' = 'shadow') {
   const isDark = mode === 'dark';
   const r = Math.max(0, borderRadius);
+  const isBorder = boxStyle === 'border';
+  const dividerColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)';
   return createTheme({
     palette: {
       mode,
@@ -99,10 +101,20 @@ function buildTheme(mode: 'light' | 'dark', primaryColor: string, borderRadius: 
         styleOverrides: {
           root: {
             borderRadius: Math.round(12 * r),
-            boxShadow: isDark
-              ? '0 1px 3px 0 rgba(0,0,0,0.4)'
-              : '0 1px 3px 0 rgba(0,0,0,0.08)',
+            boxShadow: isBorder ? 'none' : (isDark ? '0 1px 3px 0 rgba(0,0,0,0.4)' : '0 1px 3px 0 rgba(0,0,0,0.08)'),
+            border: isBorder ? `1px solid ${dividerColor}` : 'none',
           },
+        },
+      },
+      MuiPaper: {
+        styleOverrides: {
+          root: {
+            backgroundImage: 'none',
+            ...(isBorder && { boxShadow: 'none', border: `1px solid ${dividerColor}` }),
+          },
+          elevation1: isBorder ? { boxShadow: 'none', border: `1px solid ${dividerColor}` } : {},
+          elevation2: isBorder ? { boxShadow: 'none', border: `1px solid ${dividerColor}` } : {},
+          elevation3: isBorder ? { boxShadow: 'none', border: `1px solid ${dividerColor}` } : {},
         },
       },
       MuiChip: { styleOverrides: { root: { fontWeight: 500 } } },
@@ -118,9 +130,7 @@ function buildTheme(mode: 'light' | 'dark', primaryColor: string, borderRadius: 
       MuiDrawer: {
         styleOverrides: { paper: { backgroundImage: 'none' } },
       },
-      MuiPaper: {
-        styleOverrides: { root: { backgroundImage: 'none' } },
-      },
+
       MuiTableHead: {
         styleOverrides: {
           root: {
@@ -242,8 +252,8 @@ export function MuiThemeProvider({ children }: { children: ReactNode }) {
   };
 
   const theme = useMemo(
-    () => buildTheme(mode, primaryColor, settings.borderRadius, settings.colorWeakMode),
-    [mode, primaryColor, settings.borderRadius, settings.colorWeakMode],
+    () => buildTheme(mode, primaryColor, settings.borderRadius, settings.colorWeakMode, settings.boxStyle),
+    [mode, primaryColor, settings.borderRadius, settings.colorWeakMode, settings.boxStyle],
   );
 
   return (

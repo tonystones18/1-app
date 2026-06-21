@@ -98,14 +98,33 @@ interface SidebarProps {
   menuLayout?: 'vertical' | 'horizontal' | 'mixed' | 'dual';
   menuWidth?: number;
   activeSectionChildren?: NavItem[];
+  sidebarAccordion?: boolean;
 }
 
-export function Sidebar({ collapsed, onToggle, menuStyle = 'light', menuLayout = 'vertical', menuWidth = 256, activeSectionChildren }: SidebarProps) {
+export function Sidebar({ collapsed, onToggle, menuStyle = 'light', menuLayout = 'vertical', menuWidth = 256, activeSectionChildren, sidebarAccordion = true }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout } = useAuthStore();
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/');
   const handleLogout = () => { logout(); router.push('/login'); };
+
+  // Accordion state: track which section label is open (for sidebarAccordion mode)
+  const activeSection = navItems.find((i) => i.children?.some((c) => c.href && isActive(c.href)))?.label ?? null;
+  const [openSection, setOpenSection] = React.useState<string | null>(activeSection);
+  // When pathname changes, open the matching section automatically
+  React.useEffect(() => {
+    const matched = navItems.find((i) => i.children?.some((c) => c.href && isActive(c.href)))?.label ?? null;
+    if (matched) setOpenSection(matched);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
+
+  const toggleSection = (label: string) => {
+    if (sidebarAccordion) {
+      setOpenSection((prev) => (prev === label ? null : label));
+    } else {
+      setOpenSection(label); // non-accordion: just track focus, Collapse is always open
+    }
+  };
 
   const isDark = menuStyle === 'dark';
   const isMixed = menuStyle === 'mixed'; // mixed style = icon panel dark, content light
@@ -134,12 +153,21 @@ export function Sidebar({ collapsed, onToggle, menuStyle = 'light', menuLayout =
   const renderNavItems = (items: NavItem[]) => items.map((item) => {
     if (item.children) {
       const anyChildActive = item.children.some((c) => c.href && isActive(c.href));
+      const isSectionOpen = sidebarAccordion ? openSection === item.label : true;
       return (
         <React.Fragment key={item.label}>
           {!collapsed && (
-            <Typography variant="caption" sx={{ px: 2.5, pt: 1.5, pb: 0.5, display: 'block', color: textDisabled, fontWeight: 600, fontSize: '0.65rem', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-              {item.label}
-            </Typography>
+            <Box
+              onClick={() => toggleSection(item.label)}
+              sx={{ px: 2.5, pt: 1.5, pb: 0.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', '&:hover': { opacity: 0.8 } }}
+            >
+              <Typography variant="caption" sx={{ display: 'block', color: textDisabled, fontWeight: 600, fontSize: '0.65rem', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                {item.label}
+              </Typography>
+              {sidebarAccordion && (
+                <Typography variant="caption" sx={{ color: textDisabled, fontSize: '0.6rem', transition: 'transform 0.2s', display: 'inline-block', transform: isSectionOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>▲</Typography>
+              )}
+            </Box>
           )}
           {collapsed && (
             <Tooltip title={item.label} placement="right">
@@ -149,7 +177,7 @@ export function Sidebar({ collapsed, onToggle, menuStyle = 'light', menuLayout =
             </Tooltip>
           )}
           {!collapsed && (
-            <Collapse in timeout="auto">
+            <Collapse in={isSectionOpen} timeout="auto">
               <List dense disablePadding>
                 {item.children.map((child) => {
                   const active = !!(child.href && isActive(child.href));
