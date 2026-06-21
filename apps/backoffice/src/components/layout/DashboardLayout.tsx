@@ -3,17 +3,17 @@ import React, { useState, useCallback } from 'react';
 import {
   Box, AppBar, Toolbar, IconButton, Typography, Tooltip, Badge, InputBase,
   Popover, List, ListItem, ListItemText, ListItemIcon, Divider, Avatar,
-  Breadcrumbs, Link as MuiLink, Chip,
+  Breadcrumbs, Link as MuiLink, Chip, Drawer,
 } from '@mui/material';
 import {
-  Search, Notifications, LightMode, DarkMode, Settings,
+  Search, Notifications, LightMode, DarkMode, Tune,
   CreditCard, Shield, TrendingUp, Warning, CheckCircle,
-  Menu, Refresh, Apps, Fullscreen, FullscreenExit,
+  Menu, Refresh, Apps, Fullscreen, FullscreenExit, Translate, Close,
 } from '@mui/icons-material';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Sidebar } from './Sidebar';
-import { useThemeMode } from '@/theme/MuiThemeProvider';
+import { useThemeMode, COLOR_PRESETS } from '@/theme/MuiThemeProvider';
 import { useAuthStore } from '@/lib/store/auth.store';
 
 const PAGE_TITLES: Record<string, string> = {
@@ -71,9 +71,10 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   const [notifAnchor, setNotifAnchor] = useState<HTMLButtonElement | null>(null);
   const [fullscreen, setFullscreen] = useState(false);
+  const [themeDrawer, setThemeDrawer] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
-  const { mode, toggleMode } = useThemeMode();
+  const { mode, toggleMode, primaryColor, setPrimaryColor } = useThemeMode();
   const { user } = useAuthStore();
 
   const toggleFullscreen = useCallback(() => {
@@ -218,17 +219,24 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               </Box>
             </Popover>
 
+            {/* Language (decorative, matches Art Pro icon set) */}
+            <Tooltip title="Language">
+              <IconButton size="small" sx={{ color: 'text.secondary' }}>
+                <Translate sx={{ fontSize: 20 }} />
+              </IconButton>
+            </Tooltip>
+
             {/* Dark mode toggle */}
-            <Tooltip title={`Switch to ${mode === 'light' ? 'dark' : 'light'} mode`}>
-              <IconButton size="small" onClick={toggleMode}>
+            <Tooltip title={mode === 'light' ? 'Dark mode' : 'Light mode'}>
+              <IconButton size="small" onClick={toggleMode} sx={{ color: 'text.secondary' }}>
                 {mode === 'light' ? <DarkMode sx={{ fontSize: 20 }} /> : <LightMode sx={{ fontSize: 20 }} />}
               </IconButton>
             </Tooltip>
 
-            {/* Settings */}
-            <Tooltip title="Settings">
-              <IconButton size="small" component={Link} href="/platform/settings">
-                <Settings sx={{ fontSize: 20 }} />
+            {/* Theme settings (Art Pro style) */}
+            <Tooltip title="Theme settings">
+              <IconButton size="small" onClick={() => setThemeDrawer(true)} sx={{ color: 'text.secondary' }}>
+                <Tune sx={{ fontSize: 20 }} />
               </IconButton>
             </Tooltip>
 
@@ -244,6 +252,73 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             </Tooltip>
           </Toolbar>
         </AppBar>
+
+        {/* ── Theme Settings Drawer (Art Pro style) ── */}
+        <Drawer
+          anchor="right"
+          open={themeDrawer}
+          onClose={() => setThemeDrawer(false)}
+          PaperProps={{ sx: { width: 280, p: 0 } }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 2.5, py: 2, borderBottom: '1px solid', borderColor: 'divider' }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>Theme Settings</Typography>
+            <IconButton size="small" onClick={() => setThemeDrawer(false)}>
+              <Close fontSize="small" />
+            </IconButton>
+          </Box>
+
+          {/* Dark / Light mode */}
+          <Box sx={{ px: 2.5, py: 2.5, borderBottom: '1px solid', borderColor: 'divider' }}>
+            <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.disabled', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', mb: 1.5 }}>
+              Appearance
+            </Typography>
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              {(['light', 'dark'] as const).map((m) => (
+                <Box
+                  key={m}
+                  onClick={() => { if (mode !== m) toggleMode(); }}
+                  sx={{
+                    flex: 1, border: '2px solid', borderRadius: 2, p: 1.5, cursor: 'pointer', textAlign: 'center',
+                    borderColor: mode === m ? 'primary.main' : 'divider',
+                    bgcolor: mode === m ? 'primary.main' : 'transparent',
+                    color: mode === m ? 'white' : 'text.secondary',
+                    transition: 'all 0.15s',
+                    '&:hover': { borderColor: 'primary.main' },
+                  }}
+                >
+                  <Box sx={{ fontSize: 20, mb: 0.5 }}>{m === 'light' ? '☀️' : '🌙'}</Box>
+                  <Typography variant="caption" sx={{ fontWeight: 600, textTransform: 'capitalize', display: 'block', color: 'inherit' }}>
+                    {m}
+                  </Typography>
+                </Box>
+              ))}
+            </Box>
+          </Box>
+
+          {/* Primary color presets */}
+          <Box sx={{ px: 2.5, py: 2.5 }}>
+            <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.disabled', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', mb: 1.5 }}>
+              Primary Color
+            </Typography>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
+              {COLOR_PRESETS.map((preset) => (
+                <Tooltip key={preset.value} title={preset.name}>
+                  <Box
+                    onClick={() => setPrimaryColor(preset.value)}
+                    sx={{
+                      width: 36, height: 36, borderRadius: 2, bgcolor: preset.value, cursor: 'pointer',
+                      border: '3px solid',
+                      borderColor: primaryColor === preset.value ? 'text.primary' : 'transparent',
+                      boxShadow: primaryColor === preset.value ? '0 0 0 2px white inset' : 'none',
+                      transition: 'transform 0.1s',
+                      '&:hover': { transform: 'scale(1.12)' },
+                    }}
+                  />
+                </Tooltip>
+              ))}
+            </Box>
+          </Box>
+        </Drawer>
 
         {/* Main content */}
         <Box component="main" sx={{ flex: 1, p: 3, overflow: 'auto' }}>

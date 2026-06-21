@@ -1,6 +1,6 @@
 # VISIONESOFT PLATFORM - MASTER SYSTEM ARCHITECTURE AND IMPLEMENTATION SPECIFICATION
 
-> **Document Version**: v35.0.0
+> **Document Version**: v36.0.0
 > **Date**: 2026-06-21
 > **Branch**: `main`
 > **Owner**: Platform Architecture Team
@@ -4088,6 +4088,23 @@ Current baseline:
 ---
 
 ## 66. CHANGE LOG
+
+### v36.0.0 - 2026-06-21 | feat(backoffice): theme system rewrite, dark mode fix, theme settings drawer
+
+| Item | Status | Completion |
+|------|--------|------------|
+| Rewrote `MuiThemeProvider.tsx` — `buildTheme(mode, primaryColor)` function, no hardcoded colors | Completed | 100% |
+| Added `COLOR_PRESETS` array (Blue, Violet, Cyan, Green, Orange, Rose) exported from theme provider | Completed | 100% |
+| Fixed dark mode — all MUI overrides (TableHead, DataGrid, Card, Paper) use `isDark` conditionals | Completed | 100% |
+| Added `primaryColor` + `setPrimaryColor` to `ThemeContextValue` for dynamic accent color | Completed | 100% |
+| Theme persists to `localStorage` keys `vs-theme-mode` and `vs-theme-color` | Completed | 100% |
+| DashboardLayout: replaced Settings gear (navigated to /platform/settings) with `Tune` icon | Completed | 100% |
+| `Tune` icon opens right-side `Drawer` (280px) — Art Design Pro style theme settings panel | Completed | 100% |
+| Theme drawer: Light / Dark mode toggle cards with visual selection border | Completed | 100% |
+| Theme drawer: 6 color swatches using `COLOR_PRESETS`, active swatch shows checkmark | Completed | 100% |
+| Added `Translate` (language) icon to header between bell and moon icons | Completed | 100% |
+| Cleared `.next` build cache to resolve stale webpack chunk error | Completed | 100% |
+| Dev server verified clean compile at port 3001, dark mode switching confirmed working | Completed | 100% |
 
 ### v35.0.0 - 2026-06-21 | feat(backoffice): Art Design Pro redesign + hydration fix
 
