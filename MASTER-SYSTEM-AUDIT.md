@@ -1,6 +1,6 @@
 # VISIONESOFT PLATFORM - MASTER SYSTEM ARCHITECTURE AND IMPLEMENTATION SPECIFICATION
 
-> **Document Version**: v37.0.0
+> **Document Version**: v38.0.0
 > **Date**: 2026-06-21
 > **Branch**: `main`
 > **Owner**: Platform Architecture Team
@@ -4088,6 +4088,26 @@ Current baseline:
 ---
 
 ## 66. CHANGE LOG
+
+### v38.0.0 - 2026-06-21 | feat(backoffice): Menu Layout and Menu Style fully working
+
+| Item | Status | Completion |
+|------|--------|------------|
+| `Sidebar.tsx` — added `menuStyle`, `menuLayout`, `menuWidth`, `activeSectionChildren` props | Completed | 100% |
+| Menu Style **Dark**: sidebar background `#1e293b`, white text/icons, dividers, user footer | Completed | 100% |
+| Menu Style **Light**: sidebar background `background.paper`, default MUI text colors | Completed | 100% |
+| Menu Style **Mixed**: icon panel uses dark (`#1e293b`), text panel uses `background.paper` | Completed | 100% |
+| Menu Layout **Vertical** (default): standard sidebar layout | Completed | 100% |
+| Menu Layout **Horizontal**: sidebar hidden, horizontal nav bar rendered below AppBar | Completed | 100% |
+| Menu Layout **Mixed**: horizontal nav bar shows sections, sidebar shows active section's children | Completed | 100% |
+| Menu Layout **Dual**: narrow 64px icon panel + text labels panel side by side in Drawer | Completed | 100% |
+| `menuWidth` setting wired to actual sidebar width (replaces hardcoded 256px) | Completed | 100% |
+| `navItems` exported from `Sidebar.tsx` for use in DashboardLayout horizontal nav | Completed | 100% |
+| `DashboardLayout.tsx` — passes `menuStyle`, `menuLayout`, `menuWidth`, `activeSectionChildren` to Sidebar | Completed | 100% |
+| Active section detection for Mixed layout (finds section from pathname) | Completed | 100% |
+| `isHorizontal` flag controls top-level Box flex direction: `column` for horizontal, `row` for others | Completed | 100% |
+| Sidebar conditionally hidden for horizontal layout (`showSidebar = !isHorizontal`) | Completed | 100% |
+| Verified via Playwright screenshots: dark sidebar, horizontal nav, dual panel all confirmed working | Completed | 100% |
 
 ### v37.0.0 - 2026-06-21 | feat(backoffice): complete Art Pro Theme Settings panel — all 9 sections, fixed open/close
 

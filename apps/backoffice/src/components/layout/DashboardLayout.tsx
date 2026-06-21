@@ -13,7 +13,7 @@ import {
 } from '@mui/icons-material';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Sidebar } from './Sidebar';
+import { Sidebar, navItems } from './Sidebar';
 import { useThemeMode, COLOR_PRESETS } from '@/theme/MuiThemeProvider';
 import { useAuthStore } from '@/lib/store/auth.store';
 
@@ -179,6 +179,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { mode, toggleMode, primaryColor, setPrimaryColor, settings, updateSetting, resetSettings, copyConfig } = useThemeMode();
   const { showSidebarBtn, showFastEnter, showReloadBtn, showBreadcrumbs, showMultilingual, globalWatermark } = settings;
+  const { menuLayout, menuStyle, menuWidth } = settings;
   const { user } = useAuthStore();
 
   const toggleFullscreen = useCallback(() => {
@@ -201,8 +202,18 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 
   const unreadCount = NOTIFICATIONS.filter((n) => n.unread).length;
 
+  // For mixed layout: determine which section is active
+  const activeSectionItem = menuLayout === 'mixed'
+    ? navItems.find((item) => item.children?.some((c) => c.href && (pathname === c.href || pathname.startsWith(c.href + '/'))))
+    : null;
+
+  // Horizontal nav items (top-level sections for horizontal/mixed layouts)
+  const isHorizontal = menuLayout === 'horizontal';
+  const isMixedLayout = menuLayout === 'mixed';
+  const showSidebar = !isHorizontal;
+
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
+    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default', flexDirection: isHorizontal ? 'column' : 'row' }}>
       {/* Global watermark */}
       {globalWatermark && (
         <Box sx={{ position: 'fixed', inset: 0, zIndex: 9990, pointerEvents: 'none', overflow: 'hidden' }}>
@@ -221,7 +232,16 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           ))}
         </Box>
       )}
-      <Sidebar collapsed={collapsed} onToggle={() => setCollapsed(!collapsed)} />
+      {showSidebar && (
+        <Sidebar
+          collapsed={collapsed}
+          onToggle={() => setCollapsed(!collapsed)}
+          menuStyle={menuStyle}
+          menuLayout={menuLayout}
+          menuWidth={menuWidth}
+          activeSectionChildren={activeSectionItem?.children}
+        />
+      )}
 
       <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
         {/* Top Bar */}
@@ -384,6 +404,44 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             </Tooltip>
           </Toolbar>
         </AppBar>
+
+        {/* ── Horizontal / Mixed nav bar (below AppBar) ── */}
+        {(isHorizontal || isMixedLayout) && (
+          <Box sx={{ bgcolor: 'background.paper', borderBottom: '1px solid', borderColor: 'divider', px: 2, overflowX: 'auto' }}>
+            <Box sx={{ display: 'flex', gap: 0.5, minHeight: 44, alignItems: 'center' }}>
+              {navItems.map((item) => {
+                const anyActive = item.children
+                  ? item.children.some((c) => c.href && (pathname === c.href || pathname.startsWith(c.href + '/')))
+                  : !!(item.href && (pathname === item.href || pathname.startsWith(item.href + '/')));
+                const isThisSection = activeSectionItem?.label === item.label;
+                return (
+                  <Box
+                    key={item.label}
+                    component={item.href && !item.children ? Link : 'div'}
+                    href={item.href && !item.children ? item.href : undefined}
+                    onClick={item.children && item.children[0]?.href ? () => router.push(item.children![0].href!) : undefined}
+                    sx={{
+                      display: 'flex', alignItems: 'center', gap: 0.75, px: 1.5, py: 0.75,
+                      borderRadius: 1.5, cursor: 'pointer', textDecoration: 'none', whiteSpace: 'nowrap',
+                      color: (anyActive || isThisSection) ? 'primary.main' : 'text.secondary',
+                      bgcolor: (anyActive || isThisSection) ? 'primary.50' : 'transparent',
+                      borderBottom: (anyActive || isThisSection) ? '2px solid' : '2px solid transparent',
+                      borderBottomColor: (anyActive || isThisSection) ? 'primary.main' : 'transparent',
+                      borderRadius: 0, py: 1,
+                      '&:hover': { color: 'primary.main', bgcolor: 'action.hover' },
+                      transition: 'all 0.15s',
+                    }}
+                  >
+                    <Box sx={{ '& svg': { fontSize: 16 }, display: 'flex', alignItems: 'center', color: 'inherit' }}>{item.icon}</Box>
+                    <Typography variant="body2" sx={{ fontSize: '0.8125rem', fontWeight: (anyActive || isThisSection) ? 600 : 400, color: 'inherit' }}>
+                      {item.label}
+                    </Typography>
+                  </Box>
+                );
+              })}
+            </Box>
+          </Box>
+        )}
 
         {/* ── Theme Settings Panel (fixed overlay, no MUI Drawer) ── */}
         <Box
