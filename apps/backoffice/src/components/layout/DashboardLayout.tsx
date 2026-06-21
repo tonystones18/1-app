@@ -18,16 +18,16 @@ import { useThemeMode, COLOR_PRESETS } from '@/theme/MuiThemeProvider';
 import { useAuthStore } from '@/lib/store/auth.store';
 
 const LANGUAGES = [
-  { code: 'en', label: 'English',    flag: '🇬🇧' },
-  { code: 'zh', label: 'Chinese',    flag: '🇨🇳' },
-  { code: 'de', label: 'German',     flag: '🇩🇪' },
-  { code: 'fr', label: 'French',     flag: '🇫🇷' },
-  { code: 'es', label: 'Spanish',    flag: '🇪🇸' },
-  { code: 'pt', label: 'Portuguese', flag: '🇵🇹' },
-  { code: 'ru', label: 'Russian',    flag: '🇷🇺' },
-  { code: 'tr', label: 'Turkish',    flag: '🇹🇷' },
-  { code: 'he', label: 'Hebrew',     flag: '🇮🇱' },
-  { code: 'ar', label: 'Arabic',     flag: '🇸🇦' },
+  { code: 'en', label: 'English',    cc: 'gb' },
+  { code: 'zh', label: 'Chinese',    cc: 'cn' },
+  { code: 'de', label: 'German',     cc: 'de' },
+  { code: 'fr', label: 'French',     cc: 'fr' },
+  { code: 'es', label: 'Spanish',    cc: 'es' },
+  { code: 'pt', label: 'Portuguese', cc: 'pt' },
+  { code: 'ru', label: 'Russian',    cc: 'ru' },
+  { code: 'tr', label: 'Turkish',    cc: 'tr' },
+  { code: 'he', label: 'Hebrew',     cc: 'il' },
+  { code: 'ar', label: 'Arabic',     cc: 'sa' },
 ] as const;
 
 const PAGE_TITLES: Record<string, string> = {
@@ -429,8 +429,8 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             {showMultilingual && (
               <>
                 <Tooltip title="Language">
-                  <IconButton size="small" onClick={(e) => setLangAnchor(e.currentTarget)} sx={{ color: 'text.secondary', fontSize: '1.1rem', gap: 0.3 }}>
-                    <Box component="span" sx={{ fontSize: '1.1rem', lineHeight: 1 }}>{activeLang.flag}</Box>
+                  <IconButton size="small" onClick={(e) => setLangAnchor(e.currentTarget)} sx={{ color: 'text.secondary', p: 0.75 }}>
+                    <Box component="img" src={`https://flagcdn.com/w20/${activeLang.cc}.png`} alt={activeLang.label} sx={{ width: 20, height: 14, borderRadius: 0.25, display: 'block', objectFit: 'cover' }} />
                   </IconButton>
                 </Tooltip>
                 <Popover
@@ -454,7 +454,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                           transition: 'background 0.15s',
                         }}
                       >
-                        <Box component="span" sx={{ fontSize: '1.25rem', lineHeight: 1, flexShrink: 0 }}>{lang.flag}</Box>
+                        <Box component="img" src={`https://flagcdn.com/w20/${lang.cc}.png`} alt={lang.label} sx={{ width: 20, height: 14, borderRadius: 0.25, flexShrink: 0, objectFit: 'cover' }} />
                         <Typography variant="body2" sx={{ fontSize: '0.8125rem', fontWeight: activeLang.code === lang.code ? 600 : 400, color: activeLang.code === lang.code ? 'primary.main' : 'text.primary' }}>
                           {lang.label}
                         </Typography>
