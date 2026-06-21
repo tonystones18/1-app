@@ -1,15 +1,15 @@
 'use client';
-import React, { useState } from 'react';
+import React from 'react';
 import {
-  Box, Drawer, List, ListItem, ListItemButton, ListItemIcon, ListItemText,
+  Box, Drawer, List, ListItemButton, ListItemIcon, ListItemText,
   Collapse, Typography, Divider, Avatar, Tooltip, IconButton,
 } from '@mui/material';
 import {
   Dashboard, Speed, Extension, Business, SportsEsports, Group, SupervisorAccount,
   Route, AccountBalance, People, AccountBalanceWallet, CreditCard, CardGiftcard,
   Star, Security, Dns, CorporateFare, Receipt, Groups, Image, SmartToy,
-  BarChart, Settings, VerifiedUser, ExpandLess, ExpandMore, ChevronLeft,
-  ChevronRight, Logout,
+  BarChart, Settings, VerifiedUser, ChevronLeft,
+  ChevronRight, Logout, CalendarMonth, ViewKanban, Person,
 } from '@mui/icons-material';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -81,6 +81,14 @@ const navItems: NavItem[] = [
       { label: 'Settings', icon: <Settings />, href: '/platform/settings' },
     ],
   },
+  {
+    label: 'Workspace', icon: <CalendarMonth />, section: 'Workspace',
+    children: [
+      { label: 'Calendar', icon: <CalendarMonth />, href: '/calendar' },
+      { label: 'Kanban Board', icon: <ViewKanban />, href: '/kanban' },
+      { label: 'My Profile', icon: <Person />, href: '/profile' },
+    ],
+  },
 ];
 
 interface SidebarProps { collapsed: boolean; onToggle: () => void; }
@@ -89,14 +97,6 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout } = useAuthStore();
-  const [openSections, setOpenSections] = useState<Record<string, boolean>>({
-    'Aggregator': true, 'B2C': true,
-  });
-
-  const toggleSection = (label: string) => {
-    setOpenSections((prev) => ({ ...prev, [label]: !prev[label] }));
-  };
-
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/');
 
   const handleLogout = () => {
@@ -115,8 +115,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
           boxSizing: 'border-box',
           borderRight: '1px solid',
           borderColor: 'divider',
-          bgcolor: (t) => t.palette.mode === 'dark' ? '#0F172A' : '#1E293B',
-          color: 'common.white',
+          bgcolor: 'background.paper',
           transition: 'width 0.2s ease',
           overflowX: 'hidden',
           display: 'flex',
@@ -125,85 +124,79 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       }}
     >
       {/* Brand */}
-      <Box sx={{ px: 2, py: 2, display: 'flex', alignItems: 'center', gap: 1, minHeight: 64 }}>
+      <Box sx={{ px: collapsed ? 1.5 : 2.5, py: 0, display: 'flex', alignItems: 'center', gap: 1.5, minHeight: 64, borderBottom: '1px solid', borderColor: 'divider' }}>
+        <Box sx={{ width: 32, height: 32, bgcolor: 'primary.main', borderRadius: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <Speed sx={{ fontSize: 18, color: 'white' }} />
+        </Box>
         {!collapsed && (
-          <>
-            <Box sx={{ width: 32, height: 32, bgcolor: 'primary.main', borderRadius: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Speed sx={{ fontSize: 20, color: 'white' }} />
-            </Box>
-            <Box>
-              <Typography variant="subtitle2" sx={{ color: 'white', fontWeight: 700, lineHeight: 1 }}>
-                VisioneSoft
-              </Typography>
-              <Typography variant="caption" sx={{ color: 'grey.400', fontSize: '0.65rem' }}>
-                Admin Portal
-              </Typography>
-            </Box>
-          </>
-        )}
-        {collapsed && (
-          <Box sx={{ width: 32, height: 32, bgcolor: 'primary.main', borderRadius: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', mx: 'auto' }}>
-            <Speed sx={{ fontSize: 20, color: 'white' }} />
+          <Box>
+            <Typography variant="subtitle2" sx={{ fontWeight: 700, lineHeight: 1, color: 'text.primary' }}>
+              VisioneSoft
+            </Typography>
+            <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: '0.65rem' }}>
+              Admin Portal
+            </Typography>
           </Box>
         )}
       </Box>
 
-      <Divider sx={{ borderColor: 'rgba(255,255,255,0.1)' }} />
-
       {/* Navigation */}
-      <Box sx={{ flex: 1, overflow: 'auto', py: 1 }}>
+      <Box sx={{ flex: 1, overflow: 'auto', py: 1.5 }}>
         <List dense disablePadding>
           {navItems.map((item) => {
             if (item.children) {
-              const isOpen = openSections[item.label] ?? false;
               const anyChildActive = item.children.some((c) => c.href && isActive(c.href));
               return (
                 <React.Fragment key={item.label}>
-                  <ListItemButton
-                    onClick={() => toggleSection(item.label)}
-                    sx={{
-                      px: collapsed ? 1.5 : 2,
-                      py: 0.75,
-                      mx: 1,
-                      borderRadius: 1,
-                      color: anyChildActive ? 'primary.light' : 'grey.400',
-                      '&:hover': { bgcolor: 'rgba(255,255,255,0.08)', color: 'white' },
-                    }}
-                  >
-                    <ListItemIcon sx={{ minWidth: collapsed ? 'unset' : 36, color: 'inherit', mr: collapsed ? 0 : 0 }}>
-                      {item.icon}
-                    </ListItemIcon>
-                    {!collapsed && (
-                      <>
-                        <ListItemText primary={item.label} primaryTypographyProps={{ fontSize: '0.8125rem', fontWeight: anyChildActive ? 600 : 400 }} />
-                        {isOpen ? <ExpandLess sx={{ fontSize: 16 }} /> : <ExpandMore sx={{ fontSize: 16 }} />}
-                      </>
-                    )}
-                  </ListItemButton>
                   {!collapsed && (
-                    <Collapse in={isOpen} timeout="auto">
+                    <Typography
+                      variant="caption"
+                      sx={{ px: 2.5, py: 0.5, display: 'block', color: 'text.disabled', fontWeight: 600, fontSize: '0.65rem', letterSpacing: '0.08em', textTransform: 'uppercase', mt: 1 }}
+                    >
+                      {item.label}
+                    </Typography>
+                  )}
+                  {collapsed && (
+                    <Tooltip title={item.label} placement="right">
+                      <ListItemButton
+                        sx={{
+                          px: 1.5, py: 1, mx: 0.75, borderRadius: 1.5,
+                          color: anyChildActive ? 'primary.main' : 'text.secondary',
+                          bgcolor: anyChildActive ? 'action.selected' : 'transparent',
+                          '&:hover': { bgcolor: 'action.hover', color: 'text.primary' },
+                          mb: 0.25,
+                        }}
+                      >
+                        <ListItemIcon sx={{ minWidth: 'unset', color: 'inherit' }}>{item.icon}</ListItemIcon>
+                      </ListItemButton>
+                    </Tooltip>
+                  )}
+                  {!collapsed && (
+                    <Collapse in timeout="auto">
                       <List dense disablePadding>
-                        {item.children.map((child) => (
-                          <ListItemButton
-                            key={child.href}
-                            component={Link}
-                            href={child.href!}
-                            selected={!!(child.href && isActive(child.href))}
-                            sx={{
-                              pl: 5, pr: 2, py: 0.5, mx: 1, borderRadius: 1,
-                              color: child.href && isActive(child.href) ? 'primary.light' : 'grey.400',
-                              '&.Mui-selected': {
-                                bgcolor: 'rgba(96,165,250,0.12)',
-                                color: 'primary.light',
-                                '&:hover': { bgcolor: 'rgba(96,165,250,0.18)' },
-                              },
-                              '&:hover': { bgcolor: 'rgba(255,255,255,0.06)', color: 'white' },
-                            }}
-                          >
-                            <ListItemIcon sx={{ minWidth: 28, color: 'inherit', '& svg': { fontSize: 16 } }}>{child.icon}</ListItemIcon>
-                            <ListItemText primary={child.label} primaryTypographyProps={{ fontSize: '0.8125rem' }} />
-                          </ListItemButton>
-                        ))}
+                        {item.children.map((child) => {
+                          const active = !!(child.href && isActive(child.href));
+                          return (
+                            <ListItemButton
+                              key={child.href}
+                              component={Link}
+                              href={child.href!}
+                              sx={{
+                                pl: 2.5, pr: 2, py: 0.6, mx: 0.75, borderRadius: 1.5, mb: 0.25,
+                                color: active ? 'primary.main' : 'text.secondary',
+                                bgcolor: active ? 'primary.50' : 'transparent',
+                                '&:hover': { bgcolor: 'action.hover', color: 'text.primary' },
+                                '& .MuiListItemIcon-root': { color: active ? 'primary.main' : 'text.disabled' },
+                              }}
+                            >
+                              <ListItemIcon sx={{ minWidth: 28, '& svg': { fontSize: 16 } }}>{child.icon}</ListItemIcon>
+                              <ListItemText
+                                primary={child.label}
+                                primaryTypographyProps={{ fontSize: '0.8125rem', fontWeight: active ? 600 : 400 }}
+                              />
+                            </ListItemButton>
+                          );
+                        })}
                       </List>
                     </Collapse>
                   )}
@@ -211,21 +204,22 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
               );
             }
 
+            const active = !!(item.href && isActive(item.href));
             return (
               <Tooltip key={item.href} title={collapsed ? item.label : ''} placement="right">
                 <ListItemButton
                   component={Link}
                   href={item.href!}
-                  selected={!!(item.href && isActive(item.href))}
                   sx={{
-                    px: collapsed ? 1.5 : 2, py: 0.75, mx: 1, borderRadius: 1,
-                    color: item.href && isActive(item.href) ? 'primary.light' : 'grey.400',
-                    '&.Mui-selected': { bgcolor: 'rgba(96,165,250,0.12)', color: 'primary.light' },
-                    '&:hover': { bgcolor: 'rgba(255,255,255,0.08)', color: 'white' },
+                    px: collapsed ? 1.5 : 2.5, py: collapsed ? 1 : 0.75, mx: 0.75, borderRadius: 1.5, mb: 0.25,
+                    color: active ? 'primary.main' : 'text.secondary',
+                    bgcolor: active ? 'primary.50' : 'transparent',
+                    '&:hover': { bgcolor: 'action.hover', color: 'text.primary' },
+                    '& .MuiListItemIcon-root': { color: active ? 'primary.main' : 'text.disabled' },
                   }}
                 >
-                  <ListItemIcon sx={{ minWidth: collapsed ? 'unset' : 36, color: 'inherit' }}>{item.icon}</ListItemIcon>
-                  {!collapsed && <ListItemText primary={item.label} primaryTypographyProps={{ fontSize: '0.8125rem' }} />}
+                  <ListItemIcon sx={{ minWidth: collapsed ? 'unset' : 32 }}>{item.icon}</ListItemIcon>
+                  {!collapsed && <ListItemText primary={item.label} primaryTypographyProps={{ fontSize: '0.8125rem', fontWeight: active ? 600 : 400 }} />}
                 </ListItemButton>
               </Tooltip>
             );
@@ -233,25 +227,25 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         </List>
       </Box>
 
-      <Divider sx={{ borderColor: 'rgba(255,255,255,0.1)' }} />
+      <Divider />
 
       {/* User footer */}
-      <Box sx={{ px: 1.5, py: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
-        <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main', fontSize: '0.875rem' }}>
+      <Box sx={{ px: collapsed ? 1.5 : 2, py: 1.5, display: 'flex', alignItems: 'center', gap: 1, justifyContent: collapsed ? 'center' : 'flex-start' }}>
+        <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main', fontSize: '0.875rem', flexShrink: 0 }}>
           {user?.displayName?.[0]?.toUpperCase() ?? 'A'}
         </Avatar>
         {!collapsed && (
           <>
             <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Typography variant="caption" sx={{ color: 'white', fontWeight: 500, display: 'block', lineHeight: 1.2 }} noWrap>
+              <Typography variant="caption" sx={{ fontWeight: 600, display: 'block', lineHeight: 1.2, color: 'text.primary' }} noWrap>
                 {user?.displayName ?? 'Admin'}
               </Typography>
-              <Typography variant="caption" sx={{ color: 'grey.500', fontSize: '0.65rem', display: 'block' }} noWrap>
+              <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: '0.65rem', display: 'block' }} noWrap>
                 {user?.roleId?.replace(/_/g, ' ')}
               </Typography>
             </Box>
             <Tooltip title="Sign out">
-              <IconButton size="small" onClick={handleLogout} sx={{ color: 'grey.500', '&:hover': { color: 'white' } }}>
+              <IconButton size="small" onClick={handleLogout}>
                 <Logout sx={{ fontSize: 18 }} />
               </IconButton>
             </Tooltip>
@@ -261,7 +255,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
 
       {/* Collapse toggle */}
       <Box sx={{ display: 'flex', justifyContent: collapsed ? 'center' : 'flex-end', px: 1, pb: 1 }}>
-        <IconButton size="small" onClick={onToggle} sx={{ color: 'grey.500', '&:hover': { color: 'white', bgcolor: 'rgba(255,255,255,0.08)' } }}>
+        <IconButton size="small" onClick={onToggle}>
           {collapsed ? <ChevronRight sx={{ fontSize: 18 }} /> : <ChevronLeft sx={{ fontSize: 18 }} />}
         </IconButton>
       </Box>

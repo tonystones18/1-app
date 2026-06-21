@@ -6,12 +6,12 @@ import { deepmerge } from '@mui/utils';
 const lightTheme = createTheme({
   palette: {
     mode: 'light',
-    primary: { main: '#2563EB', light: '#60A5FA', dark: '#1D4ED8' },
+    primary: { main: '#3b82f6', light: '#60A5FA', dark: '#1d4ed8' },
     secondary: { main: '#7C3AED', light: '#A78BFA', dark: '#5B21B6' },
     success: { main: '#16A34A', light: '#4ADE80', dark: '#15803D' },
     warning: { main: '#D97706', light: '#FCD34D', dark: '#B45309' },
     error: { main: '#DC2626', light: '#F87171', dark: '#B91C1C' },
-    background: { default: '#F8FAFC', paper: '#FFFFFF' },
+    background: { default: '#f5f7fb', paper: '#FFFFFF' },
     grey: {
       50: '#F8FAFC', 100: '#F1F5F9', 200: '#E2E8F0', 300: '#CBD5E1',
       400: '#94A3B8', 500: '#64748B', 600: '#475569', 700: '#334155',
@@ -105,9 +105,20 @@ export function useThemeMode() {
 
 export function MuiThemeProvider({ children }: { children: ReactNode }) {
   const [mode, setMode] = React.useState<'light' | 'dark'>('light');
+
+  // Persist dark mode preference
+  React.useEffect(() => {
+    const saved = typeof window !== 'undefined' ? localStorage.getItem('vs-theme-mode') : null;
+    if (saved === 'dark' || saved === 'light') setMode(saved);
+  }, []);
+
   const theme = mode === 'light' ? lightTheme : darkTheme;
 
-  const toggleMode = () => setMode((prev) => (prev === 'light' ? 'dark' : 'light'));
+  const toggleMode = () => {
+    const next = mode === 'light' ? 'dark' : 'light';
+    localStorage.setItem('vs-theme-mode', next);
+    setMode(next);
+  };
 
   return (
     <ThemeContext.Provider value={{ mode, toggleMode }}>

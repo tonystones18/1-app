@@ -1,6 +1,6 @@
 # VISIONESOFT PLATFORM - MASTER SYSTEM ARCHITECTURE AND IMPLEMENTATION SPECIFICATION
 
-> **Document Version**: v34.0.0
+> **Document Version**: v35.0.0
 > **Date**: 2026-06-21
 > **Branch**: `main`
 > **Owner**: Platform Architecture Team
@@ -4088,6 +4088,29 @@ Current baseline:
 ---
 
 ## 66. CHANGE LOG
+
+### v35.0.0 - 2026-06-21 | feat(backoffice): Art Design Pro redesign + hydration fix
+
+| Item | Status | Completion |
+|------|--------|------------|
+| Fixed `<div>` inside `<p>` hydration error in dashboard LiveActivityFeed | Completed | 100% |
+| Fixed `<div>` inside `<p>` hydration error in DashboardLayout notification panel | Completed | 100% |
+| Redesigned Sidebar to use light background (matching Art Design Pro) | Completed | 100% |
+| Removed dark sidebar (`#1E293B`) — now uses `background.paper` with blue active items | Completed | 100% |
+| Sidebar now shows section labels (AGGREGATOR, PLAYER OPS, B2B OPERATIONS…) instead of collapsible group buttons | Completed | 100% |
+| Removed `openSections`/`toggleSection` state — all sections always visible | Completed | 100% |
+| Dashboard page completely redesigned to match Art Design Pro layout | Completed | 100% |
+| 4 KPI stat cards (icon on RIGHT in colored light bg square, large bold number, colored % change) | Completed | 100% |
+| 2 charts side-by-side: BarChart (GGR Overview, 58%) + AreaChart (Transaction Volume, 42%) | Completed | 100% |
+| Mini stats row below bar chart: 32k / 128k / 1.2k / +5% | Completed | 100% |
+| Bottom 3-column section: New Players table + Activity feed + Tasks checklist | Completed | 100% |
+| New Players table has month tabs (This Month / Last Month / This Year) | Completed | 100% |
+| Activity feed shows 6 events with color-coded dots | Completed | 100% |
+| Tasks panel with interactive checkboxes (strike-through on complete) | Completed | 100% |
+| Updated primary color to `#3b82f6` (Art Design Pro blue) | Completed | 100% |
+| Updated page background to `#f5f7fb` (Art Design Pro light gray) | Completed | 100% |
+| DashboardLayout header: added user Avatar on far right (links to /profile) | Completed | 100% |
+| DashboardLayout: imports `useAuthStore` to get user displayName for avatar | Completed | 100% |
 
 ### v32.0.0 - 2026-06-20 | docs(spec): freeze architecture and start Phase 0
 
