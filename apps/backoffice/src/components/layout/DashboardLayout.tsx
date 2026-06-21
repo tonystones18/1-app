@@ -17,7 +17,20 @@ import { Sidebar, navItems } from './Sidebar';
 import { useThemeMode, COLOR_PRESETS } from '@/theme/MuiThemeProvider';
 import { useAuthStore } from '@/lib/store/auth.store';
 
-const PAGE_TITLES: Record<string, string> = {
+const LANGUAGES = [
+  { code: 'en', label: 'English',    flag: '🇬🇧' },
+  { code: 'zh', label: 'Chinese',    flag: '🇨🇳' },
+  { code: 'de', label: 'German',     flag: '🇩🇪' },
+  { code: 'fr', label: 'French',     flag: '🇫🇷' },
+  { code: 'es', label: 'Spanish',    flag: '🇪🇸' },
+  { code: 'pt', label: 'Portuguese', flag: '🇵🇹' },
+  { code: 'ru', label: 'Russian',    flag: '🇷🇺' },
+  { code: 'tr', label: 'Turkish',    flag: '🇹🇷' },
+  { code: 'he', label: 'Hebrew',     flag: '🇮🇱' },
+  { code: 'ar', label: 'Arabic',     flag: '🇸🇦' },
+] as const;
+
+
   '/dashboard': 'Dashboard',
   '/aggregator/providers': 'Providers',
   '/aggregator/vendors': 'Vendors',
@@ -173,6 +186,8 @@ function StyleThumb({ type, label, selected, onClick }: { type: string; label: s
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   const [notifAnchor, setNotifAnchor] = useState<HTMLButtonElement | null>(null);
+  const [langAnchor, setLangAnchor] = useState<HTMLButtonElement | null>(null);
+  const [activeLang, setActiveLang] = useState<typeof LANGUAGES[number]>(LANGUAGES[0]);
   const [fullscreen, setFullscreen] = useState(false);
   const [themeDrawer, setThemeDrawer] = useState(false);
   const pathname = usePathname();
@@ -410,13 +425,47 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               </IconButton>
             </Tooltip>
 
-            {/* Language (conditional) */}
+            {/* Language picker (conditional) */}
             {showMultilingual && (
-              <Tooltip title="Language">
-                <IconButton size="small" sx={{ color: 'text.secondary' }}>
-                  <Translate sx={{ fontSize: 20 }} />
-                </IconButton>
-              </Tooltip>
+              <>
+                <Tooltip title="Language">
+                  <IconButton size="small" onClick={(e) => setLangAnchor(e.currentTarget)} sx={{ color: 'text.secondary', fontSize: '1.1rem', gap: 0.3 }}>
+                    <Box component="span" sx={{ fontSize: '1.1rem', lineHeight: 1 }}>{activeLang.flag}</Box>
+                  </IconButton>
+                </Tooltip>
+                <Popover
+                  open={Boolean(langAnchor)}
+                  anchorEl={langAnchor}
+                  onClose={() => setLangAnchor(null)}
+                  anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                  transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+                  PaperProps={{ sx: { mt: 1, minWidth: 180, borderRadius: 2, boxShadow: '0 8px 32px rgba(0,0,0,0.12)', border: '1px solid', borderColor: 'divider' } }}
+                >
+                  <Box sx={{ py: 0.75 }}>
+                    {LANGUAGES.map((lang) => (
+                      <Box
+                        key={lang.code}
+                        onClick={() => { setActiveLang(lang); setLangAnchor(null); }}
+                        sx={{
+                          display: 'flex', alignItems: 'center', gap: 1.5,
+                          px: 2, py: 0.85, cursor: 'pointer',
+                          bgcolor: activeLang.code === lang.code ? 'primary.50' : 'transparent',
+                          '&:hover': { bgcolor: 'action.hover' },
+                          transition: 'background 0.15s',
+                        }}
+                      >
+                        <Box component="span" sx={{ fontSize: '1.25rem', lineHeight: 1, flexShrink: 0 }}>{lang.flag}</Box>
+                        <Typography variant="body2" sx={{ fontSize: '0.8125rem', fontWeight: activeLang.code === lang.code ? 600 : 400, color: activeLang.code === lang.code ? 'primary.main' : 'text.primary' }}>
+                          {lang.label}
+                        </Typography>
+                        {activeLang.code === lang.code && (
+                          <Box sx={{ ml: 'auto', width: 6, height: 6, borderRadius: '50%', bgcolor: 'primary.main' }} />
+                        )}
+                      </Box>
+                    ))}
+                  </Box>
+                </Popover>
+              </>
             )}
 
             {/* Dark mode toggle */}
