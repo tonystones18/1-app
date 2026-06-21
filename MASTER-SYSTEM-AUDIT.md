@@ -1,6 +1,6 @@
 # VISIONESOFT PLATFORM - MASTER SYSTEM ARCHITECTURE AND IMPLEMENTATION SPECIFICATION
 
-> **Document Version**: v40.0.0
+> **Document Version**: v41.0.0
 > **Date**: 2026-06-21
 > **Branch**: `main`
 > **Owner**: Platform Architecture Team
@@ -4088,6 +4088,33 @@ Current baseline:
 ---
 
 ## 66. CHANGE LOG
+
+### v41.0.0 — 2026-06-22 | feat(backoffice): 20 complete production-quality admin panel pages
+
+| Item | Status | Completion |
+|------|--------|------------|
+| **aggregator/vendors** — Vendor CRUD with type/status chips, rev share %, providers count, stats row | Completed | 100% |
+| **aggregator/games** — Game catalog with category chips, RTP, volatility, stats row (10 games) | Completed | 100% |
+| **aggregator/operators** — Operators with tier chips, GGR, players, country, license, stats row | Completed | 100% |
+| **aggregator/agents** — Agents with commission rate, operator, payment method, stats row | Completed | 100% |
+| **aggregator/routes** — Routes with priority, success rate, avg latency, fallback provider, stats row | Completed | 100% |
+| **aggregator/settlements** — Settlements with reference codes, counterparty types, due dates, stats row | Completed | 100% |
+| **b2c/players** — Players with KYC status, VIP level, balance, total deposits, stats row | Completed | 100% |
+| **b2c/wallets** — Wallet ledger with color-coded tx types, running balance, view-only + stats row | Completed | 100% |
+| **b2c/payments** — Payments with PSP refs, method chips, deposit/withdrawal chips, view-only + stats row | Completed | 100% |
+| **b2c/bonuses** — Bonuses with wagering multiplier, eligible/used counts, expiry, stats row | Completed | 100% |
+| **b2c/vip** — VIP members with level chips (border colors), cashback rates, manager, stats row | Completed | 100% |
+| **b2c/compliance** — KYC/AML/PEP cases with priority chips, review dialog, assignee, stats row | Completed | 100% |
+| **b2b/white-labels** — White label instances with domain, theme, GGR, operator, stats row | Completed | 100% |
+| **b2b/crm** — CRM deal pipeline with stage chips (7 pipeline stages), conversion rate, stats row | Completed | 100% |
+| **b2b/invoices** — Invoices with mark-paid action, credit notes, overdue tracking, stats row | Completed | 100% |
+| **b2b/affiliates** — Affiliates with CPA/RevShare/Hybrid chips, commission earned, stats row | Completed | 100% |
+| **media** — Media center as card grid with type icons, filter tabs, upload button, stats row | Completed | 100% |
+| **analytics/kpis** — 8 KPI cards + BarChart (GGR by provider Recharts) + AreaChart (retention) + top 5 operators table | Completed | 100% |
+| **analytics/reports** — Reports with filter chips, generate dialog, download/regen actions, stats row | Completed | 100% |
+| **platform/audit** — Audit log with JSON payload viewer, result chips, actor/role tracking, stats row | Completed | 100% |
+| **TypeScript** — All 20 pages pass tsc --noEmit (pre-existing DashboardLayout error unrelated) | Completed | 100% |
+| **Commit** — 26a40ff pushed to main | Completed | 100% |
 
 ### v40.0.0 - 2026-06-22 | fix(backoffice): layout modes match Art Pro reference screenshots
 
