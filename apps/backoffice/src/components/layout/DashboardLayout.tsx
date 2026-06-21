@@ -30,7 +30,7 @@ const LANGUAGES = [
   { code: 'ar', label: 'Arabic',     flag: '🇸🇦' },
 ] as const;
 
-
+const PAGE_TITLES: Record<string, string> = {
   '/dashboard': 'Dashboard',
   '/aggregator/providers': 'Providers',
   '/aggregator/vendors': 'Vendors',
