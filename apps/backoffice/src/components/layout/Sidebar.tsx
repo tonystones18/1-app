@@ -9,7 +9,7 @@ import {
   Route, AccountBalance, People, AccountBalanceWallet, CreditCard, CardGiftcard,
   Star, Security, Dns, CorporateFare, Receipt, Groups, Image, SmartToy,
   BarChart, Settings, VerifiedUser, ChevronLeft,
-  ChevronRight, Logout, CalendarMonth, ViewKanban, Person,
+  ChevronRight, Logout, CalendarMonth, ViewKanban, Person, ExpandLess, ExpandMore,
 } from '@mui/icons-material';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -98,10 +98,11 @@ interface SidebarProps {
   menuLayout?: 'vertical' | 'horizontal' | 'mixed' | 'dual';
   menuWidth?: number;
   activeSectionChildren?: NavItem[];
+  activeSectionLabel?: string;
   sidebarAccordion?: boolean;
 }
 
-export function Sidebar({ collapsed, onToggle, menuStyle = 'light', menuLayout = 'vertical', menuWidth = 256, activeSectionChildren, sidebarAccordion = true }: SidebarProps) {
+export function Sidebar({ collapsed, onToggle, menuStyle = 'light', menuLayout = 'vertical', menuWidth = 256, activeSectionChildren, activeSectionLabel, sidebarAccordion = true }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout } = useAuthStore();
@@ -165,7 +166,9 @@ export function Sidebar({ collapsed, onToggle, menuStyle = 'light', menuLayout =
                 {item.label}
               </Typography>
               {sidebarAccordion && (
-                <Typography variant="caption" sx={{ color: textDisabled, fontSize: '0.6rem', transition: 'transform 0.2s', display: 'inline-block', transform: isSectionOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>▲</Typography>
+                isSectionOpen
+                  ? <ExpandLess sx={{ fontSize: 14, color: textDisabled }} />
+                  : <ExpandMore sx={{ fontSize: 14, color: textDisabled }} />
               )}
             </Box>
           )}
@@ -205,14 +208,26 @@ export function Sidebar({ collapsed, onToggle, menuStyle = 'light', menuLayout =
     );
   });
 
-  const renderMixedChildren = (children: NavItem[]) => children.map((child) => {
-    const active = !!(child.href && isActive(child.href));
-    return (
-      <ListItemButton key={child.href} component={Link} href={child.href!} sx={{ pl: 2.5, pr: 2, py: 0.6, mx: 0.75, borderRadius: 1.5, mb: 0.25, color: active ? activeColor : textSecondary, bgcolor: active ? activeBg : 'transparent', '&:hover': { bgcolor: hoverBg, color: textPrimary } }}>
-        <ListItemText primary={child.label} primaryTypographyProps={{ fontSize: '0.8125rem', fontWeight: active ? 600 : 400, color: 'inherit' }} />
-      </ListItemButton>
-    );
-  });
+  const renderMixedChildren = (children: NavItem[], sectionLabel?: string) => (
+    <>
+      {/* Section header in mixed sidebar */}
+      {sectionLabel && (
+        <Box sx={{ px: 2.5, pt: 1.5, pb: 0.5 }}>
+          <Typography variant="caption" sx={{ display: 'block', color: textDisabled, fontWeight: 600, fontSize: '0.65rem', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+            {sectionLabel}
+          </Typography>
+        </Box>
+      )}
+      {children.map((child) => {
+        const active = !!(child.href && isActive(child.href));
+        return (
+          <ListItemButton key={child.href} component={Link} href={child.href!} sx={{ pl: 2.5, pr: 2, py: 0.6, mx: 0.75, borderRadius: 1.5, mb: 0.25, color: active ? activeColor : textSecondary, bgcolor: active ? activeBg : 'transparent', '&:hover': { bgcolor: hoverBg, color: textPrimary } }}>
+            <ListItemText primary={child.label} primaryTypographyProps={{ fontSize: '0.8125rem', fontWeight: active ? 600 : 400, color: 'inherit' }} />
+          </ListItemButton>
+        );
+      })}
+    </>
+  );
 
   const brandContent = (
     <Box sx={{ px: collapsed ? 1.5 : 2.5, display: 'flex', alignItems: 'center', gap: 1.5, minHeight: 64, borderBottom: '1px solid', borderColor: dividerColor, flexShrink: 0 }}>
@@ -293,7 +308,12 @@ export function Sidebar({ collapsed, onToggle, menuStyle = 'light', menuLayout =
                 return (
                   <Tooltip key={item.label} title={item.label} placement="right">
                     <Box sx={{ display: 'flex', justifyContent: 'center', mb: 0.5 }}>
-                      <IconButton size="small" sx={{ color: iconColor, bgcolor: anyActive ? activeBg : 'transparent', borderRadius: 1.5, '&:hover': { bgcolor: hoverBg } }}>
+                      <IconButton
+                        size="small"
+                        component={item.href ? Link : item.children?.[0]?.href ? Link : 'button'}
+                        href={item.href ?? item.children?.[0]?.href ?? undefined}
+                        sx={{ color: iconColor, bgcolor: anyActive ? activeBg : 'transparent', borderRadius: 1.5, '&:hover': { bgcolor: hoverBg } }}
+                      >
                         {item.icon}
                       </IconButton>
                     </Box>
@@ -366,7 +386,7 @@ export function Sidebar({ collapsed, onToggle, menuStyle = 'light', menuLayout =
           <Box sx={{ flex: 1, overflow: 'auto', py: 1.5 }}>
             <List dense disablePadding>
               {menuLayout === 'mixed' && activeSectionChildren && activeSectionChildren.length > 0
-                ? renderMixedChildren(activeSectionChildren)
+                ? renderMixedChildren(activeSectionChildren, activeSectionLabel)
                 : renderNavItems(navItems)
               }
             </List>

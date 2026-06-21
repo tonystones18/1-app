@@ -225,7 +225,8 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   // Horizontal nav items (top-level sections for horizontal/mixed layouts)
   const isHorizontal = menuLayout === 'horizontal';
   const isMixedLayout = menuLayout === 'mixed';
-  const showSidebar = !isHorizontal;
+  // For mixed: only show sidebar when a section is active (has children to display)
+  const showSidebar = !isHorizontal && !(isMixedLayout && !activeSectionItem);
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default', flexDirection: isHorizontal ? 'column' : 'row' }}>
@@ -255,6 +256,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           menuLayout={menuLayout}
           menuWidth={menuWidth}
           activeSectionChildren={activeSectionItem?.children}
+          activeSectionLabel={activeSectionItem?.label}
           sidebarAccordion={sidebarAccordion}
         />
       )}
@@ -269,7 +271,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           />
         )}
 
-        {/* Top Bar */}}
+        {/* Top Bar */}
         <AppBar
           position="sticky"
           elevation={0}
