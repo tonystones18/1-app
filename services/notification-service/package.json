@@ -1,0 +1,21 @@
+{
+  "name": "@visionesoft/notification-service",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsc -p tsconfig.json --watch",
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "test": "tsc -p tsconfig.json --noEmit",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@visionesoft/database": "workspace:*",
+    "@visionesoft/notifications": "workspace:*",
+    "@visionesoft/platform-core": "workspace:*",
+    "@visionesoft/shared-types": "workspace:*"
+  }
+}

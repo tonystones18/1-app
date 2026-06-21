@@ -1,0 +1,24 @@
+{
+  "name": "@visionesoft/identity-service",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "node --watch dist/server.js",
+    "start": "node dist/server.js",
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "test": "tsc -p tsconfig.json --noEmit",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@visionesoft/audit": "workspace:*",
+    "@visionesoft/auth": "workspace:*",
+    "@visionesoft/database": "workspace:*",
+    "@visionesoft/permissions": "workspace:*",
+    "@visionesoft/platform-core": "workspace:*",
+    "@visionesoft/shared-types": "workspace:*"
+  }
+}

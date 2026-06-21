@@ -1,0 +1,1172 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum TenantType {
+  PLATFORM
+  AGGREGATOR
+  OPERATOR
+  WHITE_LABEL
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  LOCKED
+}
+
+enum LifecycleStatus {
+  DRAFT
+  ACTIVE
+  SUSPENDED
+  ARCHIVED
+}
+
+enum RouteType {
+  GAME_LAUNCH
+  WALLET
+  CALLBACK
+  PAYMENT
+}
+
+enum RoutePriority {
+  PRIMARY
+  FALLBACK
+  BACKUP
+  EMERGENCY
+}
+
+enum MediaAssetType {
+  PROVIDER_LOGO
+  GAME_IMAGE
+  BANNER
+  BRAND_ASSET
+  DOCUMENT
+}
+
+enum MediaAssetStatus {
+  DRAFT
+  PENDING_APPROVAL
+  APPROVED
+  REJECTED
+  ARCHIVED
+}
+
+enum OutboxStatus {
+  PENDING
+  PUBLISHED
+  FAILED
+  DEAD_LETTER
+}
+
+enum IdempotencyStatus {
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+model Tenant {
+  id        String     @id @default(uuid())
+  type      TenantType
+  name      String
+  slug      String     @unique
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  users     User[]
+  auditLogs AuditLog[]
+  providers Provider[]
+  vendors   Vendor[]
+  operators Operator[]
+  agents    Agent[]
+  games     Game[]
+  routes    RoutePolicy[]
+  media     MediaAsset[]
+  outbox    OutboxEvent[]
+}
+
+model User {
+  id           String     @id @default(uuid())
+  tenantId     String
+  email        String
+  displayName  String
+  roleId       String
+  status       UserStatus @default(ACTIVE)
+  passwordHash String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  @@unique([tenantId, email])
+  @@index([tenantId, roleId])
+}
+
+model Permission {
+  id        String   @id @default(uuid())
+  roleId    String
+  resource  String
+  action    String
+  scope     String
+  createdAt DateTime @default(now())
+
+  @@unique([roleId, resource, action, scope])
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  tenantId   String
+  actorId    String?
+  entityType String
+  entityId   String
+  action     String
+  reason     String?
+  diff       Json?
+  requestId  String
+  createdAt  DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId, entityType, entityId])
+  @@index([requestId])
+}
+
+model Provider {
+  id        String          @id @default(uuid())
+  tenantId  String
+  code      String
+  name      String
+  status    LifecycleStatus @default(DRAFT)
+  metadata  Json?
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  tenant    Tenant             @relation(fields: [tenantId], references: [id])
+  contracts ProviderContract[]
+  pricing   ProviderPricing[]
+  health    ProviderHealth[]
+  games     Game[]
+  routes    RoutePolicy[]
+
+  @@unique([tenantId, code])
+  @@index([tenantId, status])
+}
+
+model ProviderContract {
+  id          String          @id @default(uuid())
+  tenantId    String
+  providerId  String
+  name        String
+  status      LifecycleStatus @default(DRAFT)
+  startsAt    DateTime
+  endsAt      DateTime?
+  commercial  Json
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  provider Provider @relation(fields: [providerId], references: [id])
+
+  @@index([tenantId, providerId, status])
+}
+
+model ProviderPricing {
+  id         String   @id @default(uuid())
+  tenantId   String
+  providerId String
+  currency   String
+  buyBps     Int
+  minFee     Decimal? @db.Decimal(18, 6)
+  maxFee     Decimal? @db.Decimal(18, 6)
+  effectiveAt DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  provider Provider @relation(fields: [providerId], references: [id])
+
+  @@index([tenantId, providerId, currency])
+}
+
+model ProviderHealth {
+  id          String   @id @default(uuid())
+  tenantId    String
+  providerId  String
+  status      String
+  latencyMs   Int?
+  errorRate   Decimal? @db.Decimal(8, 4)
+  checkedAt   DateTime
+  details     Json?
+
+  provider Provider @relation(fields: [providerId], references: [id])
+
+  @@index([tenantId, providerId, checkedAt])
+}
+
+model Vendor {
+  id        String          @id @default(uuid())
+  tenantId  String
+  code      String
+  name      String
+  status    LifecycleStatus @default(DRAFT)
+  metadata  Json?
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  tenant    Tenant           @relation(fields: [tenantId], references: [id])
+  contracts VendorContract[]
+  pricing   VendorPricing[]
+
+  @@unique([tenantId, code])
+  @@index([tenantId, status])
+}
+
+model VendorContract {
+  id         String          @id @default(uuid())
+  tenantId   String
+  vendorId   String
+  name       String
+  status     LifecycleStatus @default(DRAFT)
+  startsAt   DateTime
+  endsAt     DateTime?
+  commercial Json
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+
+  vendor Vendor @relation(fields: [vendorId], references: [id])
+
+  @@index([tenantId, vendorId, status])
+}
+
+model VendorPricing {
+  id          String   @id @default(uuid())
+  tenantId    String
+  vendorId    String
+  currency    String
+  sellBps     Int
+  minFee      Decimal? @db.Decimal(18, 6)
+  maxFee      Decimal? @db.Decimal(18, 6)
+  effectiveAt DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  vendor Vendor @relation(fields: [vendorId], references: [id])
+
+  @@index([tenantId, vendorId, currency])
+}
+
+model Operator {
+  id        String          @id @default(uuid())
+  tenantId  String
+  code      String
+  name      String
+  status    LifecycleStatus @default(DRAFT)
+  metadata  Json?
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+  games  OperatorGame[]
+  routes RoutePolicy[]
+  agents AgentOperator[]
+
+  @@unique([tenantId, code])
+  @@index([tenantId, status])
+}
+
+model Agent {
+  id        String          @id @default(uuid())
+  tenantId  String
+  code      String
+  name      String
+  status    LifecycleStatus @default(DRAFT)
+  metadata  Json?
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  tenant    Tenant          @relation(fields: [tenantId], references: [id])
+  operators AgentOperator[]
+
+  @@unique([tenantId, code])
+  @@index([tenantId, status])
+}
+
+model AgentOperator {
+  id         String          @id @default(uuid())
+  tenantId   String
+  agentId    String
+  operatorId String
+  status     LifecycleStatus @default(ACTIVE)
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+
+  agent    Agent    @relation(fields: [agentId], references: [id])
+  operator Operator @relation(fields: [operatorId], references: [id])
+
+  @@unique([tenantId, agentId, operatorId])
+  @@index([tenantId, agentId, status])
+  @@index([tenantId, operatorId, status])
+}
+
+model Game {
+  id          String          @id @default(uuid())
+  tenantId    String
+  providerId  String
+  externalId  String
+  name        String
+  category    String
+  status      LifecycleStatus @default(DRAFT)
+  rtpBps      Int?
+  volatility  String?
+  metadata    Json?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  tenant   Tenant         @relation(fields: [tenantId], references: [id])
+  provider Provider       @relation(fields: [providerId], references: [id])
+  operators OperatorGame[]
+
+  @@unique([tenantId, providerId, externalId])
+  @@index([tenantId, category, status])
+}
+
+model OperatorGame {
+  id         String          @id @default(uuid())
+  tenantId   String
+  operatorId String
+  gameId     String
+  status     LifecycleStatus @default(DRAFT)
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+
+  operator Operator @relation(fields: [operatorId], references: [id])
+  game     Game     @relation(fields: [gameId], references: [id])
+
+  @@unique([tenantId, operatorId, gameId])
+}
+
+model RouteGroup {
+  id        String          @id @default(uuid())
+  tenantId  String
+  code      String
+  name      String
+  status    LifecycleStatus @default(DRAFT)
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  policies RoutePolicy[]
+
+  @@unique([tenantId, code])
+}
+
+model RoutePolicy {
+  id          String          @id @default(uuid())
+  tenantId    String
+  routeGroupId String?
+  operatorId  String?
+  providerId  String
+  routeType   RouteType
+  priority    RoutePriority
+  status      LifecycleStatus @default(DRAFT)
+  conditions  Json
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  tenant     Tenant      @relation(fields: [tenantId], references: [id])
+  routeGroup RouteGroup? @relation(fields: [routeGroupId], references: [id])
+  operator   Operator?   @relation(fields: [operatorId], references: [id])
+  provider   Provider    @relation(fields: [providerId], references: [id])
+  decisions  RouteDecisionLog[]
+
+  @@index([tenantId, routeType, status])
+  @@index([tenantId, operatorId])
+}
+
+model RouteDecisionLog {
+  id          String   @id @default(uuid())
+  tenantId    String
+  routePolicyId String
+  operatorId  String
+  playerId    String?
+  gameId      String?
+  decision    Json
+  createdAt   DateTime @default(now())
+
+  routePolicy RoutePolicy @relation(fields: [routePolicyId], references: [id])
+
+  @@index([tenantId, operatorId, createdAt])
+  @@index([routePolicyId])
+}
+
+model MediaAsset {
+  id                String           @id @default(uuid())
+  tenantId          String
+  type              MediaAssetType
+  status            MediaAssetStatus @default(DRAFT)
+  title             String
+  r2Key             String
+  cloudflareImageId String?
+  tags              String[]
+  metadata          Json?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId, type, status])
+  @@index([r2Key])
+}
+
+model IdempotencyKey {
+  id           String            @id @default(uuid())
+  tenantId     String
+  key          String
+  requestHash  String
+  responseHash String?
+  responseBody Json?
+  status       IdempotencyStatus @default(PROCESSING)
+  lockedUntil  DateTime
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  @@unique([tenantId, key])
+  @@index([tenantId, status, lockedUntil])
+}
+
+model OutboxEvent {
+  id            String       @id @default(uuid())
+  tenantId      String
+  name          String
+  aggregateType String
+  aggregateId   String
+  payload       Json
+  schemaVersion Int          @default(1)
+  status        OutboxStatus @default(PENDING)
+  attempts      Int          @default(0)
+  nextAttemptAt DateTime?
+  lastError     String?
+  occurredAt    DateTime     @default(now())
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId, status, nextAttemptAt])
+  @@index([aggregateType, aggregateId])
+}
+
+// ─── B2C Enums ───────────────────────────────────────────────────────────────
+
+enum PlayerStatus {
+  PENDING_VERIFICATION
+  ACTIVE
+  SUSPENDED
+  SELF_EXCLUDED
+  COOLING_OFF
+  DORMANT
+  CLOSED
+  LOCKED
+}
+
+enum KycStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  PASSED
+  FAILED
+  REQUIRES_REVIEW
+}
+
+enum RiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+  VERY_HIGH
+}
+
+model Player {
+  id                  String       @id @default(uuid())
+  tenantId            String
+  operatorId          String
+  externalId          String?
+  email               String
+  displayName         String
+  firstName           String?
+  lastName            String?
+  dateOfBirth         String?
+  nationality         String?
+  country             String
+  currency            String
+  language            String       @default("en")
+  status              PlayerStatus @default(PENDING_VERIFICATION)
+  riskLevel           RiskLevel    @default(LOW)
+  kycStatus           KycStatus    @default(NOT_STARTED)
+  emailVerified       Boolean      @default(false)
+  mobileVerified      Boolean      @default(false)
+  mobileNumber        String?
+  deviceFingerprints  String[]
+  tags                String[]
+  metadata            Json?
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+
+  wallets             Wallet[]
+  documents           PlayerDocument[]
+  notes               PlayerNote[]
+
+  @@unique([tenantId, email])
+  @@index([tenantId, operatorId, status])
+  @@index([tenantId, kycStatus])
+}
+
+model PlayerDocument {
+  id              String   @id @default(uuid())
+  playerId        String
+  tenantId        String
+  type            String
+  status          String
+  fileKey         String
+  reviewedBy      String?
+  reviewedAt      DateTime?
+  rejectionReason String?
+  expiresAt       DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  player Player @relation(fields: [playerId], references: [id])
+
+  @@index([tenantId, playerId, status])
+}
+
+model PlayerNote {
+  id        String   @id @default(uuid())
+  playerId  String
+  tenantId  String
+  content   String
+  authorId  String
+  isPinned  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  player Player @relation(fields: [playerId], references: [id])
+
+  @@index([tenantId, playerId])
+}
+
+model Wallet {
+  id                       String   @id @default(uuid())
+  tenantId                 String
+  operatorId               String
+  playerId                 String
+  currency                 String
+  cashBalance              Decimal  @default(0) @db.Decimal(28, 8)
+  bonusBalance             Decimal  @default(0) @db.Decimal(28, 8)
+  lockedBalance            Decimal  @default(0) @db.Decimal(28, 8)
+  pendingWithdrawalBalance Decimal  @default(0) @db.Decimal(28, 8)
+  isActive                 Boolean  @default(true)
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+
+  player          Player           @relation(fields: [playerId], references: [id])
+  ledgerEntries   WalletLedgerEntry[]
+  transactions    WalletTransaction[]
+  holds           WalletHold[]
+
+  @@unique([playerId, currency])
+  @@index([tenantId, operatorId, playerId])
+}
+
+model WalletLedgerEntry {
+  id              String   @id @default(uuid())
+  walletId        String
+  tenantId        String
+  operatorId      String
+  playerId        String
+  transactionId   String
+  balanceType     String
+  direction       String
+  amount          Decimal  @db.Decimal(28, 8)
+  currency        String
+  runningBalance  Decimal  @db.Decimal(28, 8)
+  sourceType      String
+  sourceId        String
+  idempotencyKey  String
+  metadata        Json?
+  postedAt        DateTime @default(now())
+
+  wallet Wallet @relation(fields: [walletId], references: [id])
+
+  @@index([tenantId, walletId, postedAt])
+  @@index([idempotencyKey])
+}
+
+model WalletTransaction {
+  id                    String   @id @default(uuid())
+  walletId              String
+  tenantId              String
+  operatorId            String
+  playerId              String
+  type                  String
+  status                String
+  currency              String
+  amount                Decimal  @db.Decimal(28, 8)
+  balanceType           String
+  idempotencyKey        String   @unique
+  sourceType            String?
+  sourceId              String?
+  reversesTransactionId String?
+  metadata              Json?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  wallet Wallet @relation(fields: [walletId], references: [id])
+
+  @@index([tenantId, walletId, type])
+  @@index([tenantId, playerId])
+}
+
+model WalletHold {
+  id         String   @id @default(uuid())
+  walletId   String
+  tenantId   String
+  playerId   String
+  currency   String
+  amount     Decimal  @db.Decimal(28, 8)
+  status     String
+  reason     String
+  expiresAt  DateTime?
+  releasedAt DateTime?
+  createdAt  DateTime @default(now())
+
+  wallet Wallet @relation(fields: [walletId], references: [id])
+
+  @@index([tenantId, walletId, status])
+}
+
+model Payment {
+  id             String   @id @default(uuid())
+  tenantId       String
+  operatorId     String
+  playerId       String
+  walletId       String
+  direction      String
+  method         String
+  currency       String
+  amount         Decimal  @db.Decimal(28, 8)
+  fee            Decimal  @default(0) @db.Decimal(28, 8)
+  netAmount      Decimal  @db.Decimal(28, 8)
+  status         String
+  pspCode        String
+  pspReference   String?
+  redirectUrl    String?
+  idempotencyKey String   @unique
+  riskScore      Int?
+  ipAddress      String?
+  country        String?
+  metadata       Json?
+  completedAt    DateTime?
+  failureReason  String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  withdrawalApproval WithdrawalApproval?
+
+  @@index([tenantId, operatorId, direction, status])
+  @@index([tenantId, playerId])
+  @@index([pspReference])
+}
+
+model WithdrawalApproval {
+  id              String   @id @default(uuid())
+  paymentId       String   @unique
+  tenantId        String
+  operatorId      String
+  playerId        String
+  currency        String
+  amount          Decimal  @db.Decimal(28, 8)
+  status          String
+  riskCheckPassed Boolean?
+  kycCheckPassed  Boolean?
+  approvedBy      String?
+  approvedAt      DateTime?
+  rejectedBy      String?
+  rejectedAt      DateTime?
+  rejectionReason String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  payment Payment @relation(fields: [paymentId], references: [id])
+
+  @@index([tenantId, status])
+}
+
+// ─── Bonus Domain ──────────────────────────────────────────────────────────
+
+model BonusTemplate {
+  id                    String   @id @default(uuid())
+  tenantId              String
+  operatorId            String
+  code                  String
+  name                  String
+  type                  String
+  isActive              Boolean  @default(true)
+  currency              String
+  minDeposit            String?
+  maxBonusAmount        String?
+  matchPercent          Int?
+  freeSpinCount         Int?
+  freeSpinValue         String?
+  wageringMultiplier    Int      @default(35)
+  expiryDays            Int      @default(30)
+  wageringContributions Json
+  eligibilityRules      Json
+  metadata              Json?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  instances BonusInstance[]
+
+  @@unique([tenantId, code])
+  @@index([tenantId, operatorId, isActive])
+}
+
+model BonusInstance {
+  id               String    @id @default(uuid())
+  templateId       String
+  tenantId         String
+  operatorId       String
+  playerId         String
+  walletId         String
+  type             String
+  status           String
+  currency         String
+  bonusAmount      Decimal   @db.Decimal(28, 8)
+  remainingAmount  Decimal   @db.Decimal(28, 8)
+  wageringRequired Decimal   @db.Decimal(28, 8)
+  wageringCompleted Decimal  @default(0) @db.Decimal(28, 8)
+  freeSpinCount    Int?
+  freeSpinsUsed    Int?
+  expiresAt        DateTime
+  activatedAt      DateTime?
+  completedAt      DateTime?
+  cancelledAt      DateTime?
+  metadata         Json?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  template BonusTemplate @relation(fields: [templateId], references: [id])
+  ledger   BonusLedger[]
+
+  @@index([tenantId, playerId, status])
+  @@index([expiresAt])
+}
+
+model BonusLedger {
+  id                   String   @id @default(uuid())
+  instanceId           String
+  tenantId             String
+  playerId             String
+  type                 String
+  amount               Decimal  @db.Decimal(28, 8)
+  wageringContribution Decimal? @db.Decimal(28, 8)
+  gameId               String?
+  betId                String?
+  postedAt             DateTime @default(now())
+
+  instance BonusInstance @relation(fields: [instanceId], references: [id])
+
+  @@index([tenantId, instanceId])
+}
+
+// ─── B2B Domain ──────────────────────────────────────────────────────────────
+
+model WhiteLabel {
+  id                String          @id @default(uuid())
+  tenantId          String
+  operatorId        String
+  code              String
+  name              String
+  status            LifecycleStatus @default(DRAFT)
+  primaryDomain     String?
+  themeConfig       Json?
+  seoConfig         Json?
+  providerPackIds   String[]
+  paymentPackIds    String[]
+  languagePacks     String[]
+  mobileConfig      Json?
+  metadata          Json?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  @@unique([tenantId, code])
+  @@index([tenantId, operatorId, status])
+}
+
+model Invoice {
+  id             String   @id @default(uuid())
+  tenantId       String
+  operatorId     String
+  billingPeriodId String?
+  invoiceNumber  String   @unique
+  status         String
+  currency       String
+  subtotal       Decimal  @db.Decimal(18, 4)
+  taxAmount      Decimal  @db.Decimal(18, 4)
+  total          Decimal  @db.Decimal(18, 4)
+  dueAt          DateTime
+  issuedAt       DateTime?
+  paidAt         DateTime?
+  notes          String?
+  lines          Json
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([tenantId, operatorId, status])
+  @@index([dueAt])
+}
+
+model CrmAccount {
+  id            String   @id @default(uuid())
+  tenantId      String
+  operatorId    String?
+  companyName   String
+  legalName     String?
+  website       String?
+  country       String
+  status        String
+  assignedTo    String?
+  contractValue String?
+  currency      String?
+  tags          String[]
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  contacts     CrmContact[]
+  activities   CrmActivity[]
+  opportunities CrmOpportunity[]
+
+  @@index([tenantId, status])
+  @@index([tenantId, assignedTo])
+}
+
+model CrmContact {
+  id        String   @id @default(uuid())
+  accountId String
+  tenantId  String
+  firstName String
+  lastName  String
+  email     String
+  title     String?
+  phone     String?
+  isPrimary Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  account CrmAccount @relation(fields: [accountId], references: [id])
+
+  @@index([tenantId, accountId])
+}
+
+model CrmActivity {
+  id          String    @id @default(uuid())
+  accountId   String
+  tenantId    String
+  type        String
+  subject     String
+  description String?
+  outcome     String?
+  scheduledAt DateTime?
+  completedAt DateTime?
+  dueAt       DateTime?
+  assignedTo  String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  account CrmAccount @relation(fields: [accountId], references: [id])
+
+  @@index([tenantId, accountId])
+  @@index([dueAt])
+}
+
+model CrmOpportunity {
+  id              String    @id @default(uuid())
+  accountId       String
+  tenantId        String
+  name            String
+  stage           String
+  value           String?
+  currency        String?
+  probability     Int?
+  expectedCloseAt DateTime?
+  closedAt        DateTime?
+  lostReason      String?
+  assignedTo      String
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  account CrmAccount @relation(fields: [accountId], references: [id])
+
+  @@index([tenantId, stage])
+}
+
+// ─── Compliance Domain ───────────────────────────────────────────────────────
+
+model KycCase {
+  id          String    @id @default(uuid())
+  playerId    String
+  tenantId    String
+  operatorId  String
+  status      String
+  level       String
+  assignedTo  String?
+  notes       String?
+  riskScore   Int?
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  documents KycDocument[]
+
+  @@index([tenantId, status])
+  @@index([playerId])
+}
+
+model KycDocument {
+  id              String    @id @default(uuid())
+  caseId          String
+  playerId        String
+  tenantId        String
+  type            String
+  status          String
+  fileKey         String
+  vendorReference String?
+  vendorResult    Json?
+  reviewedBy      String?
+  rejectionReason String?
+  expiresAt       DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  kycCase KycCase @relation(fields: [caseId], references: [id])
+
+  @@index([tenantId, caseId])
+}
+
+model ResponsibleGamingLimit {
+  id              String    @id @default(uuid())
+  playerId        String
+  tenantId        String
+  operatorId      String
+  type            String
+  period          String?
+  amount          String?
+  currency        String?
+  durationMinutes Int?
+  isActive        Boolean   @default(true)
+  pendingAmount   String?
+  pendingAt       DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([tenantId, playerId, type, isActive])
+}
+
+model SelfExclusion {
+  id          String    @id @default(uuid())
+  playerId    String
+  tenantId    String
+  operatorId  String?
+  scope       String
+  type        String
+  durationDays Int?
+  expiresAt   DateTime?
+  reason      String?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([tenantId, playerId, isActive])
+}
+
+model AmlAlert {
+  id          String   @id @default(uuid())
+  playerId    String
+  tenantId    String
+  operatorId  String
+  triggerType String
+  description String
+  amount      String?
+  currency    String?
+  status      String
+  riskScore   Int      @default(0)
+  assignedTo  String?
+  resolution  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([tenantId, status])
+  @@index([tenantId, playerId])
+}
+
+// ─── Affiliate Domain ────────────────────────────────────────────────────────
+
+model Affiliate {
+  id                  String   @id @default(uuid())
+  tenantId            String
+  operatorId          String
+  code                String
+  name                String
+  email               String
+  website             String?
+  country             String?
+  status              String
+  commissionModel     String
+  revenueSharePercent Int?
+  cpaAmount           String?
+  currency            String
+  tags                String[]
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  campaigns AffiliateCampaign[]
+
+  @@unique([tenantId, code])
+  @@index([tenantId, operatorId, status])
+}
+
+model AffiliateCampaign {
+  id              String   @id @default(uuid())
+  affiliateId     String
+  tenantId        String
+  operatorId      String
+  name            String
+  status          String
+  landingUrl      String
+  utmSource       String?
+  utmMedium       String?
+  utmCampaign     String?
+  registrations   Int      @default(0)
+  ftdCount        Int      @default(0)
+  totalDeposits   Decimal  @default(0) @db.Decimal(18, 4)
+  totalCommission Decimal  @default(0) @db.Decimal(18, 4)
+  currency        String
+  startsAt        DateTime?
+  endsAt          DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  affiliate     Affiliate @relation(fields: [affiliateId], references: [id])
+  trackingLinks AffiliateTrackingLink[]
+
+  @@index([tenantId, affiliateId, status])
+}
+
+model AffiliateTrackingLink {
+  id            String   @id @default(uuid())
+  campaignId    String
+  affiliateId   String
+  tenantId      String
+  token         String   @unique
+  url           String
+  clicks        Int      @default(0)
+  registrations Int      @default(0)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+
+  campaign AffiliateCampaign @relation(fields: [campaignId], references: [id])
+
+  @@index([tenantId, campaignId])
+}
+
+// ─── Settlement Domain ────────────────────────────────────────────────────────
+
+model SettlementCycle {
+  id                   String   @id @default(uuid())
+  tenantId             String
+  partyType            String
+  partyId              String
+  periodStart          DateTime
+  periodEnd            DateTime
+  status               String
+  currency             String
+  grossRevenue         Decimal  @db.Decimal(18, 4)
+  deductions           Decimal  @default(0) @db.Decimal(18, 4)
+  netAmount            Decimal  @db.Decimal(18, 4)
+  settlementModel      String
+  revenueSharePercent  Int?
+  lines                Json
+  approvedBy           String?
+  approvedAt           DateTime?
+  processedAt          DateTime?
+  bankReference        String?
+  notes                String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  adjustments SettlementAdjustment[]
+
+  @@index([tenantId, partyType, partyId, status])
+  @@index([periodEnd])
+}
+
+model SettlementAdjustment {
+  id             String   @id @default(uuid())
+  settlementId   String
+  tenantId       String
+  description    String
+  amount         Decimal  @db.Decimal(18, 4)
+  direction      String
+  requestedBy    String
+  approvedBy     String?
+  status         String
+  createdAt      DateTime @default(now())
+
+  settlement SettlementCycle @relation(fields: [settlementId], references: [id])
+
+  @@index([tenantId, settlementId])
+}
+
+// ─── VIP Domain ──────────────────────────────────────────────────────────────
+
+model VipTier {
+  id              String   @id @default(uuid())
+  tenantId        String
+  operatorId      String
+  name            String
+  level           Int
+  minPoints       Int
+  maxPoints       Int?
+  color           String
+  benefits        Json
+  withdrawalLimit String?
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  playerStatuses PlayerVipStatus[]
+
+  @@index([tenantId, operatorId, level])
+}
+
+model PlayerVipStatus {
+  id             String    @id @default(uuid())
+  playerId       String    @unique
+  tenantId       String
+  operatorId     String
+  tierId         String
+  currentPoints  Int       @default(0)
+  lifetimePoints Int       @default(0)
+  hostId         String?
+  notes          String?
+  promotedAt     DateTime?
+  reviewAt       DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  tier VipTier @relation(fields: [tierId], references: [id])
+
+  @@index([tenantId, operatorId])
+}

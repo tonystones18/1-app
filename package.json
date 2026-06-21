@@ -1,0 +1,32 @@
+{
+  "name": "visionesoft-platform",
+  "version": "0.1.0",
+  "private": true,
+  "description": "VisioneSoft greenfield iGaming aggregator, B2B, B2C, white-label, media, AI, and sportsbook platform.",
+  "packageManager": "pnpm@9.15.4",
+  "engines": {
+    "node": ">=20.19.0",
+    "pnpm": ">=9.0.0"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev --parallel",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "test:unit": "node --test tests/unit",
+    "typecheck": "turbo run typecheck",
+    "db:generate": "prisma generate --schema database/prisma/schema.prisma",
+    "db:validate": "pnpm -C packages/database db:validate",
+    "validate:workspace": "powershell -ExecutionPolicy Bypass -File scripts/validate-workspace.ps1",
+    "phase0:check": "pnpm validate:workspace && pnpm db:validate && pnpm db:generate && pnpm typecheck && pnpm build && pnpm test:unit"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "prisma": "^6.1.0",
+    "turbo": "^2.3.3",
+    "typescript": "^5.7.2"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.1.0"
+  }
+}
