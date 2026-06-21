@@ -547,13 +547,12 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                       }
                     }}
                     sx={{
-                      display: 'flex', alignItems: 'center', gap: 0.75, px: 1.5, py: 0.75,
-                      borderRadius: 1.5, cursor: 'pointer', textDecoration: 'none', whiteSpace: 'nowrap',
+                      display: 'flex', alignItems: 'center', gap: 0.75, px: 1.5, py: 1,
+                      borderRadius: 0, cursor: 'pointer', textDecoration: 'none', whiteSpace: 'nowrap',
                       color: (anyActive || isThisSection) ? 'primary.main' : 'text.secondary',
                       bgcolor: (anyActive || isThisSection) ? 'primary.50' : 'transparent',
                       borderBottom: (anyActive || isThisSection) ? '2px solid' : '2px solid transparent',
                       borderBottomColor: (anyActive || isThisSection) ? 'primary.main' : 'transparent',
-                      borderRadius: 0, py: 1,
                       '&:hover': { color: 'primary.main', bgcolor: 'action.hover' },
                       transition: 'all 0.15s',
                     }}
