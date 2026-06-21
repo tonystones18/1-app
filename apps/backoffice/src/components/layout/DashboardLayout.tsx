@@ -3,12 +3,13 @@ import React, { useState, useCallback } from 'react';
 import {
   Box, AppBar, Toolbar, IconButton, Typography, Tooltip, Badge, InputBase,
   Popover, List, ListItem, ListItemText, ListItemIcon, Divider, Avatar,
-  Breadcrumbs, Link as MuiLink, Chip, Drawer,
+  Breadcrumbs, Link as MuiLink, Chip, Switch, Select, MenuItem, Button,
 } from '@mui/material';
 import {
   Search, Notifications, LightMode, DarkMode, Tune,
   CreditCard, Shield, TrendingUp, Warning, CheckCircle,
   Menu, Refresh, Apps, Fullscreen, FullscreenExit, Translate, Close,
+  Add, Remove,
 } from '@mui/icons-material';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -67,6 +68,108 @@ const NOTIFICATIONS = [
   { id: 5, icon: <CheckCircle color="success" fontSize="small" />, title: 'Provider Evolution health: OK', sub: 'Yesterday', unread: false },
 ];
 
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <Typography
+      variant="caption"
+      sx={{ fontWeight: 600, color: 'text.disabled', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', mb: 1.5 }}
+    >
+      {children}
+    </Typography>
+  );
+}
+
+function SettingRow({ label, value, onChange }: { label: string; value: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', py: 0.5 }}>
+      <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '0.8125rem' }}>{label}</Typography>
+      <Switch size="small" checked={value} onChange={(_, v) => onChange(v)} />
+    </Box>
+  );
+}
+
+function LayoutThumb({ type, label, selected, onClick }: { type: string; label: string; selected: boolean; onClick: () => void }) {
+  const bc = selected ? 'primary.main' : 'divider';
+  const ab = selected ? 'primary.light' : 'action.selected';
+  const cb = 'action.hover';
+  return (
+    <Box sx={{ textAlign: 'center', cursor: 'pointer' }} onClick={onClick}>
+      <Box sx={{
+        width: 64, height: 48, border: '2px solid', borderColor: bc, borderRadius: 1.5,
+        overflow: 'hidden', position: 'relative', mb: 0.75, display: 'flex',
+        transition: 'border-color 0.15s', '&:hover': { borderColor: 'primary.main' },
+        ...(type === 'horizontal' || type === 'mixed' ? { flexDirection: 'column' } : {}),
+      }}>
+        {type === 'vertical' && <>
+          <Box sx={{ width: '35%', bgcolor: ab }} />
+          <Box sx={{ flex: 1, p: '4px 3px', display: 'flex', flexDirection: 'column', gap: '3px' }}>
+            {[0,1,2].map(i => <Box key={i} sx={{ height: 3, bgcolor: cb, borderRadius: 0.5 }} />)}
+          </Box>
+        </>}
+        {type === 'horizontal' && <>
+          <Box sx={{ height: '30%', bgcolor: ab }} />
+          <Box sx={{ flex: 1, p: '3px', display: 'flex', flexDirection: 'column', gap: '3px' }}>
+            {[0,1].map(i => <Box key={i} sx={{ height: 3, bgcolor: cb, borderRadius: 0.5 }} />)}
+          </Box>
+        </>}
+        {type === 'mixed' && <>
+          <Box sx={{ height: '26%', bgcolor: ab }} />
+          <Box sx={{ flex: 1, display: 'flex' }}>
+            <Box sx={{ width: '30%', bgcolor: ab, opacity: 0.65 }} />
+            <Box sx={{ flex: 1, p: '3px 2px', display: 'flex', flexDirection: 'column', gap: '3px' }}>
+              {[0,1].map(i => <Box key={i} sx={{ height: 3, bgcolor: cb, borderRadius: 0.5 }} />)}
+            </Box>
+          </Box>
+        </>}
+        {type === 'dual' && <>
+          <Box sx={{ width: '22%', bgcolor: ab }} />
+          <Box sx={{ width: '28%', bgcolor: ab, opacity: 0.6 }} />
+          <Box sx={{ flex: 1, p: '4px 3px', display: 'flex', flexDirection: 'column', gap: '3px' }}>
+            {[0,1,2].map(i => <Box key={i} sx={{ height: 3, bgcolor: cb, borderRadius: 0.5 }} />)}
+          </Box>
+        </>}
+        {selected && (
+          <Box sx={{ position: 'absolute', bottom: 3, right: 3, width: 14, height: 14,
+            bgcolor: 'primary.main', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Box sx={{ width: 5, height: 3.5, borderLeft: '1.5px solid white', borderBottom: '1.5px solid white', transform: 'rotate(-45deg)', mt: '-1px' }} />
+          </Box>
+        )}
+      </Box>
+      <Typography variant="caption" sx={{ fontSize: '0.7rem', color: selected ? 'primary.main' : 'text.secondary', fontWeight: selected ? 600 : 400 }}>
+        {label}
+      </Typography>
+    </Box>
+  );
+}
+
+function StyleThumb({ type, label, selected, onClick }: { type: string; label: string; selected: boolean; onClick: () => void }) {
+  const bc = selected ? 'primary.main' : 'divider';
+  const sidebarBg = type === 'light' ? '#f1f5f9' : type === 'dark' ? '#1e293b' : '#64748b';
+  return (
+    <Box sx={{ flex: 1, textAlign: 'center', cursor: 'pointer' }} onClick={onClick}>
+      <Box sx={{
+        height: 48, border: '2px solid', borderColor: bc, borderRadius: 1.5,
+        overflow: 'hidden', position: 'relative', mb: 0.75, display: 'flex',
+        transition: 'border-color 0.15s', '&:hover': { borderColor: 'primary.main' },
+      }}>
+        <Box sx={{ width: '35%', bgcolor: sidebarBg }} />
+        <Box sx={{ flex: 1, p: '4px 3px', display: 'flex', flexDirection: 'column', gap: '3px', bgcolor: 'background.paper' }}>
+          {[0,1,2].map(i => <Box key={i} sx={{ height: 3, bgcolor: 'action.hover', borderRadius: 0.5 }} />)}
+        </Box>
+        {selected && (
+          <Box sx={{ position: 'absolute', bottom: 3, right: 3, width: 14, height: 14,
+            bgcolor: 'primary.main', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Box sx={{ width: 5, height: 3.5, borderLeft: '1.5px solid white', borderBottom: '1.5px solid white', transform: 'rotate(-45deg)', mt: '-1px' }} />
+          </Box>
+        )}
+      </Box>
+      <Typography variant="caption" sx={{ fontSize: '0.7rem', color: selected ? 'primary.main' : 'text.secondary', fontWeight: selected ? 600 : 400 }}>
+        {label}
+      </Typography>
+    </Box>
+  );
+}
+
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   const [notifAnchor, setNotifAnchor] = useState<HTMLButtonElement | null>(null);
@@ -74,7 +177,8 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [themeDrawer, setThemeDrawer] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
-  const { mode, toggleMode, primaryColor, setPrimaryColor } = useThemeMode();
+  const { mode, toggleMode, primaryColor, setPrimaryColor, settings, updateSetting, resetSettings, copyConfig } = useThemeMode();
+  const { showSidebarBtn, showFastEnter, showReloadBtn, showBreadcrumbs, showMultilingual, globalWatermark } = settings;
   const { user } = useAuthStore();
 
   const toggleFullscreen = useCallback(() => {
@@ -99,6 +203,24 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
+      {/* Global watermark */}
+      {globalWatermark && (
+        <Box sx={{ position: 'fixed', inset: 0, zIndex: 9990, pointerEvents: 'none', overflow: 'hidden' }}>
+          {Array.from({ length: 12 }).map((_, i) => (
+            <Box
+              key={i}
+              sx={{
+                position: 'absolute', fontSize: '0.9rem', fontWeight: 700, opacity: 0.06,
+                color: 'text.primary', transform: 'rotate(-30deg)',
+                left: `${(i % 4) * 27 - 5}%`, top: `${Math.floor(i / 4) * 36 + 5}%`,
+                whiteSpace: 'nowrap', userSelect: 'none',
+              }}
+            >
+              VisioneSoft Admin
+            </Box>
+          ))}
+        </Box>
+      )}
       <Sidebar collapsed={collapsed} onToggle={() => setCollapsed(!collapsed)} />
 
       <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
@@ -106,49 +228,57 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         <AppBar
           position="sticky"
           elevation={0}
-          sx={{ bgcolor: 'background.paper', borderBottom: '1px solid', borderColor: 'divider', color: 'text.primary' }}
+          sx={{ bgcolor: 'background.paper', borderBottom: '1px solid', borderColor: 'divider', color: 'text.primary', zIndex: (theme) => theme.zIndex.drawer + 2 }}
         >
           <Toolbar sx={{ gap: 0.75, minHeight: '56px !important', px: { xs: 1.5, sm: 2 } }}>
             {/* ── Left: hamburger | refresh | apps | breadcrumbs ── */}
-            <Tooltip title="Toggle sidebar">
-              <IconButton size="small" onClick={() => setCollapsed(!collapsed)} sx={{ color: 'text.secondary' }}>
-                <Menu sx={{ fontSize: 20 }} />
-              </IconButton>
-            </Tooltip>
+            {showSidebarBtn && (
+              <Tooltip title="Toggle sidebar">
+                <IconButton size="small" onClick={() => setCollapsed(!collapsed)} sx={{ color: 'text.secondary' }}>
+                  <Menu sx={{ fontSize: 20 }} />
+                </IconButton>
+              </Tooltip>
+            )}
 
-            <Tooltip title="Refresh">
-              <IconButton size="small" onClick={() => router.refresh()} sx={{ color: 'text.secondary' }}>
-                <Refresh sx={{ fontSize: 18 }} />
-              </IconButton>
-            </Tooltip>
+            {showReloadBtn && (
+              <Tooltip title="Refresh">
+                <IconButton size="small" onClick={() => router.refresh()} sx={{ color: 'text.secondary' }}>
+                  <Refresh sx={{ fontSize: 18 }} />
+                </IconButton>
+              </Tooltip>
+            )}
 
-            <Tooltip title="Dashboard">
-              <IconButton size="small" component={Link} href="/dashboard" sx={{ color: 'text.secondary' }}>
-                <Apps sx={{ fontSize: 18 }} />
-              </IconButton>
-            </Tooltip>
+            {showFastEnter && (
+              <Tooltip title="Dashboard">
+                <IconButton size="small" component={Link} href="/dashboard" sx={{ color: 'text.secondary' }}>
+                  <Apps sx={{ fontSize: 18 }} />
+                </IconButton>
+              </Tooltip>
+            )}
 
             {/* Breadcrumbs */}
-            <Breadcrumbs
-              separator={<Box component="span" sx={{ color: 'text.disabled', mx: 0.25 }}>/</Box>}
-              sx={{ ml: 0.5, '& .MuiBreadcrumbs-ol': { flexWrap: 'nowrap', alignItems: 'center' } }}
-            >
-              <MuiLink
-                component={Link}
-                href="/dashboard"
-                underline="hover"
-                sx={{ fontSize: '0.8125rem', color: 'text.secondary', '&:hover': { color: 'primary.main' } }}
+            {showBreadcrumbs && (
+              <Breadcrumbs
+                separator={<Box component="span" sx={{ color: 'text.disabled', mx: 0.25 }}>/</Box>}
+                sx={{ ml: 0.5, '& .MuiBreadcrumbs-ol': { flexWrap: 'nowrap', alignItems: 'center' } }}
               >
-                {breadcrumbs.length > 0 ? (SECTION_MAP[breadcrumbs[0]?.href.split('/')[1]] ?? 'Dashboard') : 'Dashboard'}
-              </MuiLink>
-              {breadcrumbs.map(({ href, label, isLast }) =>
-                isLast ? (
-                  <Typography key={href} sx={{ fontSize: '0.8125rem', color: 'text.primary', fontWeight: 500 }}>
-                    {label}
-                  </Typography>
-                ) : null
-              )}
-            </Breadcrumbs>
+                <MuiLink
+                  component={Link}
+                  href="/dashboard"
+                  underline="hover"
+                  sx={{ fontSize: '0.8125rem', color: 'text.secondary', '&:hover': { color: 'primary.main' } }}
+                >
+                  {breadcrumbs.length > 0 ? (SECTION_MAP[breadcrumbs[0]?.href.split('/')[1]] ?? 'Dashboard') : 'Dashboard'}
+                </MuiLink>
+                {breadcrumbs.map(({ href, label, isLast }) =>
+                  isLast ? (
+                    <Typography key={href} sx={{ fontSize: '0.8125rem', color: 'text.primary', fontWeight: 500 }}>
+                      {label}
+                    </Typography>
+                  ) : null
+                )}
+              </Breadcrumbs>
+            )}
 
             <Box sx={{ flex: 1 }} />
 
@@ -219,12 +349,14 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               </Box>
             </Popover>
 
-            {/* Language (decorative, matches Art Pro icon set) */}
-            <Tooltip title="Language">
-              <IconButton size="small" sx={{ color: 'text.secondary' }}>
-                <Translate sx={{ fontSize: 20 }} />
-              </IconButton>
-            </Tooltip>
+            {/* Language (conditional) */}
+            {showMultilingual && (
+              <Tooltip title="Language">
+                <IconButton size="small" sx={{ color: 'text.secondary' }}>
+                  <Translate sx={{ fontSize: 20 }} />
+                </IconButton>
+              </Tooltip>
+            )}
 
             {/* Dark mode toggle */}
             <Tooltip title={mode === 'light' ? 'Dark mode' : 'Light mode'}>
@@ -253,72 +385,210 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           </Toolbar>
         </AppBar>
 
-        {/* ── Theme Settings Drawer (Art Pro style) ── */}
-        <Drawer
-          anchor="right"
-          open={themeDrawer}
-          onClose={() => setThemeDrawer(false)}
-          PaperProps={{ sx: { width: 280, p: 0 } }}
+        {/* ── Theme Settings Panel (fixed overlay, no MUI Drawer) ── */}
+        <Box
+          sx={{
+            position: 'fixed', top: 0, right: 0, bottom: 0, width: 320,
+            bgcolor: 'background.paper',
+            borderLeft: '1px solid', borderColor: 'divider',
+            boxShadow: '-4px 0 32px rgba(0,0,0,0.12)',
+            display: 'flex', flexDirection: 'column',
+            zIndex: 1400,
+            transition: 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+          }}
+          style={{
+            transform: themeDrawer ? 'translateX(0)' : 'translateX(100%)',
+            pointerEvents: themeDrawer ? 'auto' : 'none',
+          }}
         >
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 2.5, py: 2, borderBottom: '1px solid', borderColor: 'divider' }}>
+          {/* Panel header */}
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 2.5, py: 1.75, borderBottom: '1px solid', borderColor: 'divider', flexShrink: 0 }}>
             <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>Theme Settings</Typography>
             <IconButton size="small" onClick={() => setThemeDrawer(false)}>
               <Close fontSize="small" />
             </IconButton>
           </Box>
 
-          {/* Dark / Light mode */}
-          <Box sx={{ px: 2.5, py: 2.5, borderBottom: '1px solid', borderColor: 'divider' }}>
-            <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.disabled', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', mb: 1.5 }}>
-              Appearance
-            </Typography>
-            <Box sx={{ display: 'flex', gap: 1 }}>
-              {(['light', 'dark'] as const).map((m) => (
+          {/* Scrollable body */}
+          <Box sx={{ flex: 1, overflowY: 'auto', px: 2.5, py: 2.5 }}>
+
+            {/* ── SECTION 1: Theme Style ── */}
+            <SectionLabel>Theme Style</SectionLabel>
+            <Box sx={{ display: 'flex', gap: 1, mb: 3 }}>
+              {([{ k: 'light', label: 'Light', icon: '☀️' }, { k: 'dark', label: 'Dark', icon: '🌙' }, { k: 'system', label: 'System', icon: '💻' }] as const).map(({ k, label, icon }) => (
                 <Box
-                  key={m}
-                  onClick={() => { if (mode !== m) toggleMode(); }}
+                  key={k}
+                  onClick={() => updateSetting('themeStyle', k)}
                   sx={{
-                    flex: 1, border: '2px solid', borderRadius: 2, p: 1.5, cursor: 'pointer', textAlign: 'center',
-                    borderColor: mode === m ? 'primary.main' : 'divider',
-                    bgcolor: mode === m ? 'primary.main' : 'transparent',
-                    color: mode === m ? 'white' : 'text.secondary',
-                    transition: 'all 0.15s',
-                    '&:hover': { borderColor: 'primary.main' },
+                    flex: 1, border: '2px solid', borderRadius: 2, p: 1.25, cursor: 'pointer', textAlign: 'center',
+                    borderColor: settings.themeStyle === k ? 'primary.main' : 'divider',
+                    bgcolor: settings.themeStyle === k ? 'primary.main' : 'transparent',
+                    color: settings.themeStyle === k ? 'white' : 'text.secondary',
+                    transition: 'all 0.15s', '&:hover': { borderColor: 'primary.main' },
                   }}
                 >
-                  <Box sx={{ fontSize: 20, mb: 0.5 }}>{m === 'light' ? '☀️' : '🌙'}</Box>
-                  <Typography variant="caption" sx={{ fontWeight: 600, textTransform: 'capitalize', display: 'block', color: 'inherit' }}>
-                    {m}
-                  </Typography>
+                  <Box sx={{ fontSize: 18, mb: 0.5 }}>{icon}</Box>
+                  <Typography variant="caption" sx={{ fontWeight: 600, display: 'block', color: 'inherit' }}>{label}</Typography>
                 </Box>
               ))}
             </Box>
-          </Box>
 
-          {/* Primary color presets */}
-          <Box sx={{ px: 2.5, py: 2.5 }}>
-            <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.disabled', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', mb: 1.5 }}>
-              Primary Color
-            </Typography>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
+            {/* ── SECTION 2: Menu Layout ── */}
+            <SectionLabel>Menu Layout</SectionLabel>
+            <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap', mb: 3 }}>
+              {([{ k: 'vertical', label: 'Vertical' }, { k: 'horizontal', label: 'Horizontal' }, { k: 'mixed', label: 'Mixed' }, { k: 'dual', label: 'Dual' }] as const).map(({ k, label }) => (
+                <LayoutThumb key={k} type={k} label={label} selected={settings.menuLayout === k} onClick={() => updateSetting('menuLayout', k)} />
+              ))}
+            </Box>
+
+            {/* ── SECTION 3: Menu Style ── */}
+            <SectionLabel>Menu Style</SectionLabel>
+            <Box sx={{ display: 'flex', gap: 1.5, mb: 3 }}>
+              {([{ k: 'light', label: 'Light' }, { k: 'dark', label: 'Dark' }, { k: 'mixed', label: 'Mixed' }] as const).map(({ k, label }) => (
+                <StyleThumb key={k} type={k} label={label} selected={settings.menuStyle === k} onClick={() => updateSetting('menuStyle', k)} />
+              ))}
+            </Box>
+
+            {/* ── SECTION 4: Theme Color ── */}
+            <SectionLabel>Theme Color</SectionLabel>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5, mb: 3 }}>
               {COLOR_PRESETS.map((preset) => (
                 <Tooltip key={preset.value} title={preset.name}>
                   <Box
                     onClick={() => setPrimaryColor(preset.value)}
                     sx={{
-                      width: 36, height: 36, borderRadius: 2, bgcolor: preset.value, cursor: 'pointer',
+                      width: 32, height: 32, borderRadius: '50%', bgcolor: preset.value, cursor: 'pointer',
                       border: '3px solid',
                       borderColor: primaryColor === preset.value ? 'text.primary' : 'transparent',
                       boxShadow: primaryColor === preset.value ? '0 0 0 2px white inset' : 'none',
-                      transition: 'transform 0.1s',
-                      '&:hover': { transform: 'scale(1.12)' },
+                      transition: 'transform 0.1s', '&:hover': { transform: 'scale(1.15)' },
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
                     }}
-                  />
+                  >
+                    {primaryColor === preset.value && (
+                      <Box sx={{ width: 8, height: 5, borderLeft: '2px solid white', borderBottom: '2px solid white', transform: 'rotate(-45deg)', mt: '-2px' }} />
+                    )}
+                  </Box>
                 </Tooltip>
               ))}
             </Box>
+
+            {/* ── SECTION 5: Box Style ── */}
+            <SectionLabel>Box Style</SectionLabel>
+            <Box sx={{ display: 'flex', gap: 1.5, mb: 3 }}>
+              {([{ k: 'border', label: 'Border' }, { k: 'shadow', label: 'Shadow' }] as const).map(({ k, label }) => (
+                <Box
+                  key={k}
+                  onClick={() => updateSetting('boxStyle', k)}
+                  sx={{
+                    flex: 1, py: 1.25, border: '2px solid', borderRadius: 2, textAlign: 'center',
+                    cursor: 'pointer', transition: 'all 0.15s',
+                    borderColor: settings.boxStyle === k ? 'primary.main' : 'divider',
+                    bgcolor: settings.boxStyle === k ? 'primary.main' : 'transparent',
+                    color: settings.boxStyle === k ? 'white' : 'text.secondary',
+                    '&:hover': { borderColor: 'primary.main' },
+                  }}
+                >
+                  <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '0.8125rem', color: 'inherit' }}>{label}</Typography>
+                </Box>
+              ))}
+            </Box>
+
+            {/* ── SECTION 6: Container Width ── */}
+            <SectionLabel>Container Width</SectionLabel>
+            <Box sx={{ display: 'flex', gap: 1.5, mb: 3 }}>
+              {([{ k: 'full', label: 'Full' }, { k: 'boxed', label: 'Boxed' }] as const).map(({ k, label }) => (
+                <Box
+                  key={k}
+                  onClick={() => updateSetting('containerWidth', k)}
+                  sx={{
+                    flex: 1, py: 1.25, border: '2px solid', borderRadius: 2, textAlign: 'center',
+                    cursor: 'pointer', transition: 'all 0.15s',
+                    borderColor: settings.containerWidth === k ? 'primary.main' : 'divider',
+                    bgcolor: settings.containerWidth === k ? 'primary.main' : 'transparent',
+                    color: settings.containerWidth === k ? 'white' : 'text.secondary',
+                    '&:hover': { borderColor: 'primary.main' },
+                  }}
+                >
+                  <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '0.8125rem', color: 'inherit' }}>{label}</Typography>
+                </Box>
+              ))}
+            </Box>
+
+            <Divider sx={{ mb: 2.5 }} />
+
+            {/* ── SECTION 7: Basic Config ── */}
+            <SectionLabel>Basic Config</SectionLabel>
+            <SettingRow label="Show work tab"               value={settings.showWorkTab}        onChange={(v) => updateSetting('showWorkTab', v)} />
+            <SettingRow label="Sidebar opens accordion"     value={settings.sidebarAccordion}   onChange={(v) => updateSetting('sidebarAccordion', v)} />
+            <SettingRow label="Show sidebar button"         value={settings.showSidebarBtn}     onChange={(v) => updateSetting('showSidebarBtn', v)} />
+            <SettingRow label="Show fast enter"             value={settings.showFastEnter}      onChange={(v) => updateSetting('showFastEnter', v)} />
+            <SettingRow label="Show reload page button"     value={settings.showReloadBtn}      onChange={(v) => updateSetting('showReloadBtn', v)} />
+            <SettingRow label="Show crumb navigation"       value={settings.showBreadcrumbs}    onChange={(v) => updateSetting('showBreadcrumbs', v)} />
+            <SettingRow label="Show multilingual selection" value={settings.showMultilingual}   onChange={(v) => updateSetting('showMultilingual', v)} />
+            <SettingRow label="Show top progress bar"       value={settings.showTopProgressBar} onChange={(v) => updateSetting('showTopProgressBar', v)} />
+            <SettingRow label="Color Weakness Mode"         value={settings.colorWeakMode}      onChange={(v) => updateSetting('colorWeakMode', v)} />
+            <SettingRow label="Global watermark"            value={settings.globalWatermark}    onChange={(v) => updateSetting('globalWatermark', v)} />
+
+            {/* ── SECTION 8: Advanced UI Settings ── */}
+            {/* Menu width */}
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', py: 0.75 }}>
+              <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '0.8125rem' }}>Menu width</Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <IconButton size="small" onClick={() => updateSetting('menuWidth', Math.max(160, settings.menuWidth - 10))} sx={{ p: 0.5 }}>
+                  <Remove sx={{ fontSize: 14 }} />
+                </IconButton>
+                <Typography variant="body2" sx={{ minWidth: 32, textAlign: 'center', fontSize: '0.8rem', fontWeight: 600 }}>
+                  {settings.menuWidth}
+                </Typography>
+                <IconButton size="small" onClick={() => updateSetting('menuWidth', Math.min(320, settings.menuWidth + 10))} sx={{ p: 0.5 }}>
+                  <Add sx={{ fontSize: 14 }} />
+                </IconButton>
+              </Box>
+            </Box>
+
+            {/* Tab style */}
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', py: 0.75 }}>
+              <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '0.8125rem' }}>Tab style</Typography>
+              <Select size="small" value={settings.tabStyle} onChange={(e) => updateSetting('tabStyle', e.target.value)} sx={{ fontSize: '0.8rem', minWidth: 110, height: 32 }}>
+                {['Default', 'Card', 'Rounded', 'Modern'].map((s) => (
+                  <MenuItem key={s} value={s} sx={{ fontSize: '0.8rem' }}>{s}</MenuItem>
+                ))}
+              </Select>
+            </Box>
+
+            {/* Page animation */}
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', py: 0.75 }}>
+              <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '0.8125rem' }}>Page animation</Typography>
+              <Select size="small" value={settings.pageAnimation} onChange={(e) => updateSetting('pageAnimation', e.target.value)} sx={{ fontSize: '0.8rem', minWidth: 110, height: 32 }}>
+                {['Slide Left', 'Slide Right', 'Fade', 'Zoom', 'None'].map((s) => (
+                  <MenuItem key={s} value={s} sx={{ fontSize: '0.8rem' }}>{s}</MenuItem>
+                ))}
+              </Select>
+            </Box>
+
+            {/* Custom radius */}
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', py: 0.75 }}>
+              <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '0.8125rem' }}>Custom radius</Typography>
+              <Select size="small" value={String(settings.borderRadius)} onChange={(e) => updateSetting('borderRadius', parseFloat(e.target.value))} sx={{ fontSize: '0.8rem', minWidth: 110, height: 32 }}>
+                {['0', '0.25', '0.5', '0.75', '1', '1.25', '1.5'].map((v) => (
+                  <MenuItem key={v} value={v} sx={{ fontSize: '0.8rem' }}>{v}</MenuItem>
+                ))}
+              </Select>
+            </Box>
+
           </Box>
-        </Drawer>
+
+          {/* Footer: Copy / Reset */}
+          <Box sx={{ px: 2.5, py: 2, borderTop: '1px solid', borderColor: 'divider', display: 'flex', gap: 1.5, flexShrink: 0 }}>
+            <Button variant="contained" fullWidth size="small" onClick={copyConfig} sx={{ fontSize: '0.8rem', py: 0.875 }}>
+              Copy Config
+            </Button>
+            <Button variant="outlined" fullWidth size="small" color="error" onClick={resetSettings} sx={{ fontSize: '0.8rem', py: 0.875 }}>
+              Reset Config
+            </Button>
+          </Box>
+        </Box>
 
         {/* Main content */}
         <Box component="main" sx={{ flex: 1, p: 3, overflow: 'auto' }}>

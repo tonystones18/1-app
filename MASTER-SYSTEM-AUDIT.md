@@ -1,6 +1,6 @@
 # VISIONESOFT PLATFORM - MASTER SYSTEM ARCHITECTURE AND IMPLEMENTATION SPECIFICATION
 
-> **Document Version**: v36.0.0
+> **Document Version**: v37.0.0
 > **Date**: 2026-06-21
 > **Branch**: `main`
 > **Owner**: Platform Architecture Team
@@ -4088,6 +4088,31 @@ Current baseline:
 ---
 
 ## 66. CHANGE LOG
+
+### v37.0.0 - 2026-06-21 | feat(backoffice): complete Art Pro Theme Settings panel — all 9 sections, fixed open/close
+
+| Item | Status | Completion |
+|------|--------|------------|
+| Expanded `UISettings` interface — added `themeStyle`, `menuLayout`, `menuStyle`, `boxStyle`, `containerWidth`, `menuWidth`, `tabStyle`, `pageAnimation`, `borderRadius` | Completed | 100% |
+| `themeStyle` replaces separate `mode` state — supports `'light' \| 'dark' \| 'system'` | Completed | 100% |
+| System theme detection via `prefers-color-scheme` media query with `useEffect` + `addEventListener` | Completed | 100% |
+| Updated `COLOR_PRESETS` to 7 colors: Blue, Purple, Indigo, Green, Cyan, Orange, Pink | Completed | 100% |
+| Replaced MUI `<Drawer>` (had backdrop-click bug) with custom `position:fixed` Box overlay | Completed | 100% |
+| **Root cause fix**: Moved dynamic `transform`/`pointerEvents` from Emotion `sx` to React `style` prop — Emotion was generating same CSS class hash for both open/closed states due to frozen `document.timeline` in dev environment, causing CSS transitions to be stuck at time 0 | Completed | 100% |
+| Panel reliably opens/closes — React `style` prop updates inline style directly, bypassing Emotion class-regeneration | Completed | 100% |
+| Implemented all 9 Theme Settings sections matching Art Design Pro | Completed | 100% |
+| Section 1 — Theme Style: Light / Dark / System cards with emoji + label | Completed | 100% |
+| Section 2 — Menu Layout: 4 `LayoutThumb` visual thumbnails (Vertical/Horizontal/Mixed/Dual) | Completed | 100% |
+| Section 3 — Menu Style: 3 `StyleThumb` visual thumbnails (Light/Dark/Mixed) | Completed | 100% |
+| Section 4 — Theme Color: 7 colored circles, active shows checkmark | Completed | 100% |
+| Section 5 — Box Style: Border / Shadow toggle buttons | Completed | 100% |
+| Section 6 — Container Width: Full / Boxed toggle buttons | Completed | 100% |
+| Section 7 — Basic Config: 10 `SettingRow` toggles (work tab, accordion, sidebar btn, fast enter, reload, breadcrumbs, multilingual, progress bar, color weak mode, watermark) | Completed | 100% |
+| Section 8 — Advanced UI: Menu Width ± stepper, Tab Style select, Page Animation select, Custom Radius select | Completed | 100% |
+| Section 9 — Config Management: Copy Config + Reset Config buttons | Completed | 100% |
+| Removed debug `console.log` statements from `DashboardLayout.tsx` | Completed | 100% |
+| Removed `openThemeDrawer` debug function, replaced with inline `onClick={() => setThemeDrawer(true)}` | Completed | 100% |
+| Panel verified open with all 9 sections visible via Playwright screenshot | Completed | 100% |
 
 ### v36.0.0 - 2026-06-21 | feat(backoffice): theme system rewrite, dark mode fix, theme settings drawer
 

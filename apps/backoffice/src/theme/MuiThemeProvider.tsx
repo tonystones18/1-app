@@ -4,15 +4,61 @@ import { ThemeProvider, createTheme, CssBaseline, alpha } from '@mui/material';
 
 export const COLOR_PRESETS = [
   { name: 'Blue',   value: '#3b82f6' },
-  { name: 'Violet', value: '#7c3aed' },
-  { name: 'Cyan',   value: '#0891b2' },
+  { name: 'Purple', value: '#7c3aed' },
+  { name: 'Indigo', value: '#4f46e5' },
   { name: 'Green',  value: '#16a34a' },
+  { name: 'Cyan',   value: '#0891b2' },
   { name: 'Orange', value: '#ea580c' },
-  { name: 'Rose',   value: '#e11d48' },
+  { name: 'Pink',   value: '#ec4899' },
 ];
 
-function buildTheme(mode: 'light' | 'dark', primaryColor: string) {
+export interface UISettings {
+  themeStyle: 'light' | 'dark' | 'system';
+  menuLayout: 'vertical' | 'horizontal' | 'mixed' | 'dual';
+  menuStyle: 'light' | 'dark' | 'mixed';
+  boxStyle: 'border' | 'shadow';
+  containerWidth: 'full' | 'boxed';
+  showSidebarBtn: boolean;
+  showFastEnter: boolean;
+  showReloadBtn: boolean;
+  showBreadcrumbs: boolean;
+  showMultilingual: boolean;
+  showWorkTab: boolean;
+  showTopProgressBar: boolean;
+  colorWeakMode: boolean;
+  globalWatermark: boolean;
+  sidebarAccordion: boolean;
+  menuWidth: number;
+  tabStyle: string;
+  pageAnimation: string;
+  borderRadius: number;
+}
+
+export const DEFAULT_UI_SETTINGS: UISettings = {
+  themeStyle: 'light',
+  menuLayout: 'vertical',
+  menuStyle: 'dark',
+  boxStyle: 'shadow',
+  containerWidth: 'full',
+  showSidebarBtn: true,
+  showFastEnter: true,
+  showReloadBtn: true,
+  showBreadcrumbs: true,
+  showMultilingual: true,
+  showWorkTab: false,
+  showTopProgressBar: true,
+  colorWeakMode: false,
+  globalWatermark: false,
+  sidebarAccordion: true,
+  menuWidth: 240,
+  tabStyle: 'Default',
+  pageAnimation: 'Slide Left',
+  borderRadius: 1.0,
+};
+
+function buildTheme(mode: 'light' | 'dark', primaryColor: string, borderRadius: number, colorWeakMode: boolean) {
   const isDark = mode === 'dark';
+  const r = Math.max(0, borderRadius);
   return createTheme({
     palette: {
       mode,
@@ -36,20 +82,23 @@ function buildTheme(mode: 'light' | 'dark', primaryColor: string) {
       h6: { fontWeight: 600 },
       subtitle1: { fontWeight: 600 },
     },
-    shape: { borderRadius: 8 },
+    shape: { borderRadius: Math.round(8 * r) },
     components: {
       MuiCssBaseline: {
         styleOverrides: {
-          body: { scrollbarWidth: 'thin' },
+          body: {
+            scrollbarWidth: 'thin',
+            filter: colorWeakMode ? 'grayscale(100%)' : 'none',
+          },
         },
       },
       MuiButton: {
-        styleOverrides: { root: { textTransform: 'none', fontWeight: 500, borderRadius: 8 } },
+        styleOverrides: { root: { textTransform: 'none', fontWeight: 500, borderRadius: Math.round(8 * r) } },
       },
       MuiCard: {
         styleOverrides: {
           root: {
-            borderRadius: 12,
+            borderRadius: Math.round(12 * r),
             boxShadow: isDark
               ? '0 1px 3px 0 rgba(0,0,0,0.4)'
               : '0 1px 3px 0 rgba(0,0,0,0.08)',
@@ -117,6 +166,10 @@ interface ThemeContextValue {
   toggleMode: () => void;
   primaryColor: string;
   setPrimaryColor: (color: string) => void;
+  settings: UISettings;
+  updateSetting: <K extends keyof UISettings>(key: K, value: UISettings[K]) => void;
+  resetSettings: () => void;
+  copyConfig: () => void;
 }
 
 const ThemeContext = createContext<ThemeContextValue>({
@@ -124,6 +177,10 @@ const ThemeContext = createContext<ThemeContextValue>({
   toggleMode: () => {},
   primaryColor: '#3b82f6',
   setPrimaryColor: () => {},
+  settings: DEFAULT_UI_SETTINGS,
+  updateSetting: () => {},
+  resetSettings: () => {},
+  copyConfig: () => {},
 });
 
 export function useThemeMode() {
@@ -131,31 +188,66 @@ export function useThemeMode() {
 }
 
 export function MuiThemeProvider({ children }: { children: ReactNode }) {
-  const [mode, setMode] = React.useState<'light' | 'dark'>('light');
   const [primaryColor, setPrimaryColorState] = React.useState('#3b82f6');
+  const [settings, setSettings] = React.useState<UISettings>(DEFAULT_UI_SETTINGS);
+  const [systemDark, setSystemDark] = React.useState(false);
 
   React.useEffect(() => {
-    const savedMode  = localStorage.getItem('vs-theme-mode');
-    const savedColor = localStorage.getItem('vs-theme-color');
-    if (savedMode  === 'dark' || savedMode  === 'light') setMode(savedMode);
-    if (savedColor) setPrimaryColorState(savedColor);
+    if (typeof window === 'undefined') return;
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    setSystemDark(mq.matches);
+    const listener = (e: MediaQueryListEvent) => setSystemDark(e.matches);
+    mq.addEventListener('change', listener);
+    return () => mq.removeEventListener('change', listener);
   }, []);
 
-  const toggleMode = () => {
-    const next = mode === 'light' ? 'dark' : 'light';
-    localStorage.setItem('vs-theme-mode', next);
-    setMode(next);
+  React.useEffect(() => {
+    const savedColor    = localStorage.getItem('vs-theme-color');
+    const savedSettings = localStorage.getItem('vs-ui-settings');
+    if (savedColor) setPrimaryColorState(savedColor);
+    if (savedSettings) {
+      try { setSettings({ ...DEFAULT_UI_SETTINGS, ...JSON.parse(savedSettings) }); } catch { /* ignore */ }
+    }
+  }, []);
+
+  const updateSetting = <K extends keyof UISettings>(key: K, value: UISettings[K]) => {
+    setSettings(prev => {
+      const next = { ...prev, [key]: value };
+      localStorage.setItem('vs-ui-settings', JSON.stringify(next));
+      return next;
+    });
   };
+
+  const resolvedMode: 'light' | 'dark' =
+    settings.themeStyle === 'system' ? (systemDark ? 'dark' : 'light') : settings.themeStyle;
+  const mode = resolvedMode;
+
+  const toggleMode = () => updateSetting('themeStyle', resolvedMode === 'light' ? 'dark' : 'light');
 
   const setPrimaryColor = (color: string) => {
     localStorage.setItem('vs-theme-color', color);
     setPrimaryColorState(color);
   };
 
-  const theme = useMemo(() => buildTheme(mode, primaryColor), [mode, primaryColor]);
+  const resetSettings = () => {
+    localStorage.removeItem('vs-ui-settings');
+    localStorage.removeItem('vs-theme-color');
+    setSettings(DEFAULT_UI_SETTINGS);
+    setPrimaryColorState('#3b82f6');
+  };
+
+  const copyConfig = () => {
+    const config = { mode, primaryColor, ...settings };
+    navigator.clipboard?.writeText(JSON.stringify(config, null, 2));
+  };
+
+  const theme = useMemo(
+    () => buildTheme(mode, primaryColor, settings.borderRadius, settings.colorWeakMode),
+    [mode, primaryColor, settings.borderRadius, settings.colorWeakMode],
+  );
 
   return (
-    <ThemeContext.Provider value={{ mode, toggleMode, primaryColor, setPrimaryColor }}>
+    <ThemeContext.Provider value={{ mode, toggleMode, primaryColor, setPrimaryColor, settings, updateSetting, resetSettings, copyConfig }}>
       <ThemeProvider theme={theme}>
         <CssBaseline />
         {children}
