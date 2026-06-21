@@ -635,7 +635,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 
             {/* ── SECTION 4: Theme Color ── */}
             <SectionLabel>Theme Color</SectionLabel>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5, mb: 3 }}>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5, mb: 1.5 }}>
               {COLOR_PRESETS.map((preset) => (
                 <Tooltip key={preset.value} title={preset.name}>
                   <Box
@@ -655,6 +655,52 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                   </Box>
                 </Tooltip>
               ))}
+            </Box>
+
+            {/* Custom color picker */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3 }}>
+              <Tooltip title="Custom color">
+                <Box
+                  sx={{
+                    width: 32, height: 32, borderRadius: '50%', overflow: 'hidden', flexShrink: 0,
+                    border: '3px solid',
+                    borderColor: !COLOR_PRESETS.some((p) => p.value === primaryColor) ? 'text.primary' : 'divider',
+                    cursor: 'pointer', position: 'relative', transition: 'border-color 0.15s',
+                    '&:hover': { transform: 'scale(1.1)' },
+                  }}
+                >
+                  <Box
+                    component="input"
+                    type="color"
+                    value={primaryColor}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPrimaryColor(e.target.value)}
+                    sx={{
+                      position: 'absolute', inset: '-4px', width: 'calc(100% + 8px)', height: 'calc(100% + 8px)',
+                      border: 'none', padding: 0, cursor: 'pointer', opacity: 1,
+                      background: 'none',
+                    }}
+                  />
+                </Box>
+              </Tooltip>
+              <Box sx={{ flex: 1 }}>
+                <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 0.5, fontSize: '0.75rem' }}>
+                  Custom color
+                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Box
+                    sx={{
+                      flex: 1, border: '1px solid', borderColor: 'divider', borderRadius: 1,
+                      px: 1.25, py: 0.5, display: 'flex', alignItems: 'center', gap: 0.75,
+                      bgcolor: 'action.hover',
+                    }}
+                  >
+                    <Box sx={{ width: 12, height: 12, borderRadius: '2px', bgcolor: primaryColor, flexShrink: 0 }} />
+                    <Typography variant="caption" sx={{ fontFamily: 'monospace', fontSize: '0.78rem', color: 'text.primary', letterSpacing: '0.04em' }}>
+                      {primaryColor.toUpperCase()}
+                    </Typography>
+                  </Box>
+                </Box>
+              </Box>
             </Box>
 
             {/* ── SECTION 5: Box Style ── */}
