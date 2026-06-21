@@ -4,7 +4,7 @@ import {
   Grid, Card, CardContent, Typography, Box, Avatar,
   Tab, Tabs, Table, TableHead, TableBody, TableRow, TableCell,
   LinearProgress, Chip, IconButton, List, ListItem, ListItemAvatar,
-  ListItemText, Checkbox,
+  ListItemText, Checkbox, useTheme,
 } from '@mui/material';
 import {
   TrendingUp, People, CreditCard, Route,
@@ -85,6 +85,11 @@ function StatCard({ label, value, change, unit = 'vs last week', icon, iconColor
 }
 
 export default function DashboardPage() {
+  const theme = useTheme();
+  const primary   = theme.palette.primary.main;
+  const success   = theme.palette.success.main;
+  const warning   = theme.palette.warning.main;
+  const secondary = theme.palette.secondary.main;
   const [playerTab, setPlayerTab] = useState(0);
   const [completedTasks, setCompletedTasks] = useState<number[]>([3]);
 
@@ -100,16 +105,16 @@ export default function DashboardPage() {
 
       <Grid container spacing={2.5} sx={{ mb: 3 }}>
         <Grid size={{ xs: 12, sm: 6, xl: 3 }}>
-          <StatCard label="Total GGR (MTD)" value="$111.1k" change={12.4} icon={<TrendingUp />} iconColor="#3b82f6" />
+          <StatCard label="Total GGR (MTD)"  value="$111.1k" change={12.4}  icon={<TrendingUp />} iconColor={primary} />
         </Grid>
         <Grid size={{ xs: 12, sm: 6, xl: 3 }}>
-          <StatCard label="Active Players" value="4,840" change={8.2} icon={<People />} iconColor="#16A34A" />
+          <StatCard label="Active Players"   value="4,840"   change={8.2}   icon={<People />}      iconColor={success} />
         </Grid>
         <Grid size={{ xs: 12, sm: 6, xl: 3 }}>
-          <StatCard label="Deposits (30d)" value="$76.1k" change={-3.1} icon={<CreditCard />} iconColor="#D97706" />
+          <StatCard label="Deposits (30d)"   value="$76.1k"  change={-3.1}  icon={<CreditCard />}  iconColor={warning} />
         </Grid>
         <Grid size={{ xs: 12, sm: 6, xl: 3 }}>
-          <StatCard label="Route Success" value="98.7%" change={0.4} icon={<Route />} iconColor="#7C3AED" />
+          <StatCard label="Route Success"    value="98.7%"   change={0.4}   icon={<Route />}       iconColor={secondary} />
         </Grid>
       </Grid>
 
@@ -127,7 +132,7 @@ export default function DashboardPage() {
                   <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#94A3B8' }} axisLine={false} tickLine={false} />
                   <YAxis tick={{ fontSize: 11, fill: '#94A3B8' }} axisLine={false} tickLine={false} tickFormatter={(v) => `$${(v/1000).toFixed(0)}k`} />
                   <ReTooltip formatter={(v: number) => [`$${v.toLocaleString()}`, 'GGR']} contentStyle={{ borderRadius: 8, border: '1px solid #E2E8F0', fontSize: 12 }} />
-                  <Bar dataKey="ggr" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="ggr" fill={primary} radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
               <Box sx={{ display: 'flex', justifyContent: 'space-around', mt: 2, pt: 2, borderTop: '1px solid', borderColor: 'divider' }}>
@@ -156,15 +161,15 @@ export default function DashboardPage() {
                 <AreaChart data={visitData} margin={{ top: 4, right: 4, bottom: 0, left: -24 }}>
                   <defs>
                     <linearGradient id="visitGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.18} />
-                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                      <stop offset="5%"  stopColor={primary} stopOpacity={0.18} />
+                      <stop offset="95%" stopColor={primary} stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
                   <XAxis dataKey="month" tick={{ fontSize: 10, fill: '#94A3B8' }} axisLine={false} tickLine={false} />
                   <YAxis tick={{ fontSize: 10, fill: '#94A3B8' }} axisLine={false} tickLine={false} />
                   <ReTooltip contentStyle={{ borderRadius: 8, border: '1px solid #E2E8F0', fontSize: 12 }} />
-                  <Area type="monotone" dataKey="v" name="Volume (k)" stroke="#3b82f6" strokeWidth={2.5} fill="url(#visitGrad)" dot={false} />
+                  <Area type="monotone" dataKey="v" name="Volume (k)" stroke={primary} strokeWidth={2.5} fill="url(#visitGrad)" dot={false} />
                 </AreaChart>
               </ResponsiveContainer>
             </CardContent>
@@ -207,7 +212,7 @@ export default function DashboardPage() {
                       <TableCell><Typography variant="caption" color="text.secondary">{p.region}</Typography></TableCell>
                       <TableCell><Typography variant="caption" color="text.secondary">{p.gender}</Typography></TableCell>
                       <TableCell sx={{ minWidth: 80 }}>
-                        <LinearProgress variant="determinate" value={p.progress} sx={{ height: 5, borderRadius: 3, bgcolor: 'action.hover', '& .MuiLinearProgress-bar': { borderRadius: 3, bgcolor: '#3b82f6' } }} />
+                        <LinearProgress variant="determinate" value={p.progress} sx={{ height: 5, borderRadius: 3, bgcolor: 'action.hover', '& .MuiLinearProgress-bar': { borderRadius: 3 } }} />
                       </TableCell>
                     </TableRow>
                   ))}
