@@ -61,18 +61,17 @@ function buildTheme(mode: 'light' | 'dark', primaryColor: string, borderRadius: 
   const r = Math.max(0, borderRadius);
   const isBorder = boxStyle === 'border';
   const dividerColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)';
-  // Derive tints from primary color so all tokens update when color changes
-  const primary50  = alpha(primaryColor, isDark ? 0.15 : 0.08);
-  const primary100 = alpha(primaryColor, isDark ? 0.20 : 0.12);
-  const primary200 = alpha(primaryColor, isDark ? 0.30 : 0.22);
   return createTheme({
     palette: {
       mode,
       primary: {
         main: primaryColor,
-        // Custom tint shades — used via sx `bgcolor: 'primary.50'` etc.
-        /* eslint-disable @typescript-eslint/no-explicit-any */
-        ...(({ 50: primary50, 100: primary100, 200: primary200 }) as any),
+        50:  alpha(primaryColor, 0.08),
+        100: alpha(primaryColor, 0.12),
+        200: alpha(primaryColor, 0.20),
+        light: alpha(primaryColor, 0.7),
+        dark:  primaryColor,
+        contrastText: '#ffffff',
       },
       secondary: { main: '#7C3AED' },
       success:   { main: '#16A34A' },
