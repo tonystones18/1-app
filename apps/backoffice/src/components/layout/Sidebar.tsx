@@ -135,7 +135,7 @@ export function Sidebar({ collapsed, onToggle, menuStyle = 'light', menuLayout =
   const textSecondary = isDark ? 'rgba(255,255,255,0.55)' : 'text.secondary';
   const textDisabled = isDark ? 'rgba(255,255,255,0.3)' : 'text.disabled';
   const hoverBg = isDark ? 'rgba(255,255,255,0.08)' : 'action.hover';
-  const activeBg = isDark ? 'rgba(99,179,237,0.15)' : 'primary.50';
+  const activeBg = 'primary.50';
   const activeColor = 'primary.main';
   const dividerColor = isDark ? 'rgba(255,255,255,0.1)' : 'divider';
 
